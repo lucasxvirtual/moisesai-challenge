@@ -45,9 +45,13 @@ class MusicRepositoryImpl @Inject constructor(
             artistName = artistName.orEmpty(),
             albumName = albumName.orEmpty(),
             artworkUrl = artworkUrl,
+            // The iTunes CDN serves any resolution via URL — "100x100bb" is just a size token
+            // that can be replaced with e.g. "600x600bb". Not in the API spec but widely used.
+            artworkUrlHd = artworkUrl?.replace("100x100bb", "600x600bb"),
             previewUrl = previewUrl,
             durationMillis = durationMillis ?: 0L,
-            genre = genre.orEmpty()
+            genre = genre.orEmpty(),
+            collectionId = collectionId
         )
     }
 }

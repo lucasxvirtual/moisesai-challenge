@@ -7,6 +7,7 @@ data class TrackDto(
     @SerializedName("trackName") val name: String? = null,
     @SerializedName("artistName") val artistName: String? = null,
     @SerializedName("collectionName") val albumName: String? = null,
+    @SerializedName("collectionId") val collectionId: Long = 0,
     @SerializedName("artworkUrl100") val artworkUrl: String? = null,
     @SerializedName("previewUrl") val previewUrl: String? = null,
     @SerializedName("trackTimeMillis") val durationMillis: Long? = null,

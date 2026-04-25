@@ -1,14 +1,10 @@
 package com.example.moisesaichallenge.domain.model
 
-data class Track(
+data class Album(
     val id: Long,
     val name: String,
     val artistName: String,
-    val albumName: String,
     val artworkUrl: String?,
     val artworkUrlHd: String?,
-    val previewUrl: String?,
-    val durationMillis: Long,
-    val genre: String,
-    val collectionId: Long = 0L
+    val tracks: List<Track>
 )

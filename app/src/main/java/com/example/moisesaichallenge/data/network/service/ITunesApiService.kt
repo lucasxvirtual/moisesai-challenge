@@ -1,5 +1,6 @@
 package com.example.moisesaichallenge.data.network.service
 
+import com.example.moisesaichallenge.data.network.model.AlbumLookupResponseDto
 import com.example.moisesaichallenge.data.network.model.ITunesSearchResponseDto
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -14,4 +15,10 @@ interface ITunesApiService {
         @Query("limit") limit: Int,
         @Query("offset") offset: Int
     ): ITunesSearchResponseDto
+
+    @GET("lookup")
+    suspend fun lookupAlbum(
+        @Query("id") collectionId: Long,
+        @Query("entity") entity: String = "song"
+    ): AlbumLookupResponseDto
 }
