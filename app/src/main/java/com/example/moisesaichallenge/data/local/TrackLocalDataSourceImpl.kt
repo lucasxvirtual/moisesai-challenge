@@ -9,8 +9,8 @@ class TrackLocalDataSourceImpl @Inject constructor() : TrackLocalDataSource {
 
     private val tracks = LinkedHashMap<Long, Track>()
 
-    override fun addAll(newTracks: List<Track>) {
-        newTracks.forEach { tracks[it.id] = it }
+    override fun addAll(tracks: List<Track>) {
+        tracks.forEach { this@TrackLocalDataSourceImpl.tracks[it.id] = it }
     }
 
     override fun search(query: String): List<Track> {

@@ -1,16 +1,20 @@
 package com.example.moisesaichallenge.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -40,6 +44,7 @@ fun TrackItem(
     modifier: Modifier = Modifier,
     isNowPlaying: Boolean = false,
     isPlaying: Boolean = false,
+    isSelected: Boolean = false,
     onPlayPauseClick: (() -> Unit)? = null
 ) {
     Row(
@@ -49,14 +54,33 @@ fun TrackItem(
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = track.artworkUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+        Box(
             modifier = Modifier
                 .size(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-        )
+        ) {
+            AsyncImage(
+                model = track.artworkUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.55f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.width(6.dp))
 
@@ -117,42 +141,22 @@ private val previewTrack = Track(
     genre = "Rock"
 )
 
-private val previewTrackLongName = Track(
-    id = 2L,
-    name = "The Show Must Go On (Live at Wembley Stadium, July 1986)",
-    artistName = "Queen & David Bowie & Elton John & Friends",
-    albumName = "Live at Wembley '86",
-    artworkUrl = null,
-    artworkUrlHd = null,
-    previewUrl = null,
-    durationMillis = 420_000L,
-    genre = "Rock"
-)
-
 @PreviewLightDark
 @Composable
 private fun TrackItemPreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         Surface {
-            TrackItem(
-                track = previewTrack,
-                onClick = {},
-                onMoreClick = {}
-            )
+            TrackItem(track = previewTrack, onClick = {}, onMoreClick = {})
         }
     }
 }
 
 @PreviewLightDark
 @Composable
-private fun TrackItemLongNamePreview() {
+private fun TrackItemSelectedPreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         Surface {
-            TrackItem(
-                track = previewTrackLongName,
-                onClick = {},
-                onMoreClick = {}
-            )
+            TrackItem(track = previewTrack, onClick = {}, onMoreClick = null, isSelected = true)
         }
     }
 }

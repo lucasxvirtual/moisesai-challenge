@@ -12,8 +12,7 @@ interface ITunesApiService {
         @Query("term") term: String,
         @Query("media") media: String = "music",
         @Query("entity") entity: String = "song",
-        @Query("limit") limit: Int,
-        @Query("offset") offset: Int
+        @Query("limit") limit: Int
     ): ITunesSearchResponseDto
 
     @GET("lookup")

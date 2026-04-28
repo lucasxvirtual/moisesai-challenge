@@ -1,54 +1,95 @@
 package com.example.moisesaichallenge.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.moisesaichallenge.presentation.album.AlbumScreen
 import com.example.moisesaichallenge.presentation.home.HomeScreen
 import com.example.moisesaichallenge.presentation.player.PlayerScreen
+import com.example.moisesaichallenge.presentation.playlists.CreatePlaylistScreen
+import com.example.moisesaichallenge.presentation.playlists.PlaylistDetailScreen
 import com.example.moisesaichallenge.presentation.splash.SplashScreen
 
-private const val ROUTE_SPLASH = "splash"
-private const val ROUTE_HOME = "home"
-private const val ROUTE_PLAYER = "player"
-private const val ROUTE_ALBUM = "album/{collectionId}"
+private const val TRANSITION_DURATION = 350
 
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = ROUTE_SPLASH) {
-        composable(ROUTE_SPLASH) {
+    NavHost(
+        navController = navController,
+        startDestination = Splash,
+        enterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(TRANSITION_DURATION)
+            )
+        }
+    ) {
+        composable<Splash>(
+            enterTransition = { fadeIn(tween(TRANSITION_DURATION)) },
+            exitTransition = { fadeOut(tween(TRANSITION_DURATION)) }
+        ) {
             SplashScreen(
                 onSplashFinished = {
-                    navController.navigate(ROUTE_HOME) {
-                        popUpTo(ROUTE_SPLASH) { inclusive = true }
+                    navController.navigate(Home) {
+                        popUpTo<Splash> { inclusive = true }
                     }
                 }
             )
         }
-        composable(ROUTE_HOME) {
+        composable<Home> {
             HomeScreen(
-                onNavigateToPlayer = { navController.navigate(ROUTE_PLAYER) },
-                onNavigateToAlbum = { collectionId -> navController.navigate("album/$collectionId") }
+                onNavigateToPlayer = { navController.navigate(Player) },
+                onNavigateToAlbum = { collectionId -> navController.navigate(Album(collectionId)) },
+                onNavigateToCreatePlaylist = { navController.navigate(CreatePlaylist) },
+                onNavigateToPlaylist = { playlistId -> navController.navigate(PlaylistDetail(playlistId)) }
             )
         }
-        composable(ROUTE_PLAYER) {
+        composable<Player> {
             PlayerScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateToAlbum = { collectionId -> navController.navigate("album/$collectionId") }
+                onNavigateToAlbum = { collectionId -> navController.navigate(Album(collectionId)) }
             )
         }
-        composable(
-            route = ROUTE_ALBUM,
-            arguments = listOf(navArgument("collectionId") { type = NavType.LongType })
-        ) {
+        composable<Album> {
             AlbumScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateToPlayer = { navController.navigate(ROUTE_PLAYER) }
+                onNavigateToPlayer = { navController.navigate(Player) }
+            )
+        }
+        composable<CreatePlaylist> {
+            CreatePlaylistScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable<PlaylistDetail> {
+            PlaylistDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToPlayer = { navController.navigate(Player) }
             )
         }
     }

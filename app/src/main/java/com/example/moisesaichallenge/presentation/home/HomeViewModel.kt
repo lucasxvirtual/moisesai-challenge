@@ -2,9 +2,8 @@ package com.example.moisesaichallenge.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.moisesaichallenge.core.pagination.PaginationParams
 import com.example.moisesaichallenge.core.playback.PlaybackManager
-import com.example.moisesaichallenge.domain.model.SearchEmission
+import com.example.moisesaichallenge.domain.model.SearchResult
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.domain.usecase.GetRecentlyPlayedUseCase
 import com.example.moisesaichallenge.domain.usecase.RecordTrackPlayedUseCase
@@ -39,7 +38,7 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private var currentPaginationParams = PaginationParams()
+    private var currentPage = 1
     private var searchJob: Job? = null
     private var loadJob: Job? = null
 
@@ -54,19 +53,20 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onQueryChange(query: String) {
-        _uiState.update { it.copy(query = query, error = null, isOffline = false) }
         searchJob?.cancel()
         loadJob?.cancel()
 
         if (query.isBlank()) {
-            currentPaginationParams = PaginationParams()
-            _uiState.update { it.copy(tracks = emptyList(), hasMore = false, isLoading = false, isOffline = false) }
+            currentPage = 1
+            _uiState.update { it.copy(query = query, tracks = emptyList(), hasMore = false, isLoading = false, error = null, isOffline = false) }
             return
         }
 
+        _uiState.update { it.copy(query = query, tracks = emptyList(), isLoading = true, error = null, isOffline = false) }
+
         searchJob = viewModelScope.launch {
             delay(DEBOUNCE_MS)
-            currentPaginationParams = PaginationParams()
+            currentPage = 1
             loadTracks(isLoadingMore = false)
         }
     }
@@ -74,7 +74,7 @@ class HomeViewModel @Inject constructor(
     fun loadNextPage() {
         val state = _uiState.value
         if (state.isLoading || state.isLoadingMore || !state.hasMore) return
-        currentPaginationParams = currentPaginationParams.nextPage()
+        currentPage++
         loadTracks(isLoadingMore = true)
     }
 
@@ -109,34 +109,26 @@ class HomeViewModel @Inject constructor(
                 if (isLoadingMore) state.copy(isLoadingMore = true) else state.copy(isLoading = true)
             }
 
-            searchTracksUseCase(query, currentPaginationParams).collect { emission ->
+            searchTracksUseCase(query, currentPage).collect { emission ->
                 when (emission) {
-                    is SearchEmission.Local -> {
-                        _uiState.update { it.copy(tracks = emission.tracks, isLoading = true) }
-                    }
-                    is SearchEmission.Remote -> {
+                    is SearchResult.Success -> {
                         _uiState.update { state ->
                             if (isLoadingMore) {
-                                val existingIds = state.tracks.mapTo(HashSet()) { it.id }
-                                val newItems = emission.tracks.takeWhile { it.id !in existingIds }
-                                val looped = newItems.size < emission.tracks.size
                                 state.copy(
-                                    tracks = state.tracks + newItems,
+                                    tracks = state.tracks + emission.tracks,
                                     isLoadingMore = false,
-                                    hasMore = emission.hasMore && !looped
+                                    hasMore = emission.hasMore
                                 )
                             } else {
-                                val apiIds = emission.tracks.mapTo(HashSet()) { it.id }
-                                val localOnly = state.tracks.filter { it.id !in apiIds }
                                 state.copy(
-                                    tracks = emission.tracks + localOnly,
+                                    tracks = emission.tracks,
                                     isLoading = false,
                                     hasMore = emission.hasMore
                                 )
                             }
                         }
                     }
-                    is SearchEmission.Error -> {
+                    is SearchResult.Error -> {
                         val offline = emission.throwable is IOException
                         _uiState.update { state ->
                             state.copy(

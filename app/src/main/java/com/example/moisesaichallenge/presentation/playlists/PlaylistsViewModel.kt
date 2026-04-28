@@ -1,0 +1,15 @@
+package com.example.moisesaichallenge.presentation.playlists
+
+import androidx.lifecycle.ViewModel
+import com.example.moisesaichallenge.domain.model.Playlist
+import com.example.moisesaichallenge.domain.usecase.GetPlaylistsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
+
+@HiltViewModel
+class PlaylistsViewModel @Inject constructor(
+    getPlaylistsUseCase: GetPlaylistsUseCase
+) : ViewModel() {
+    val playlists: StateFlow<List<Playlist>> = getPlaylistsUseCase()
+}

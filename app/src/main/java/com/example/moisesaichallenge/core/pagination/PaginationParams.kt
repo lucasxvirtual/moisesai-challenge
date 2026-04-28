@@ -1,12 +1,8 @@
 package com.example.moisesaichallenge.core.pagination
 
-data class PaginationParams(
-    val limit: Int = DEFAULT_PAGE_SIZE,
-    val offset: Int = 0
-) {
-    fun nextPage(): PaginationParams = copy(offset = offset + limit)
-
+data class PaginationParams(val page: Int = 1) {
     companion object {
-        const val DEFAULT_PAGE_SIZE = 20
+        const val PAGE_SIZE = 20
+        const val FETCH_LIMIT = 200
     }
 }

@@ -12,9 +12,11 @@ import com.example.moisesaichallenge.data.network.datasource.MusicRemoteDataSour
 import com.example.moisesaichallenge.data.network.datasource.MusicRemoteDataSourceImpl
 import com.example.moisesaichallenge.data.repository.AlbumRepositoryImpl
 import com.example.moisesaichallenge.data.repository.MusicRepositoryImpl
+import com.example.moisesaichallenge.data.repository.PlaylistRepositoryImpl
 import com.example.moisesaichallenge.data.repository.RecentlyPlayedRepositoryImpl
 import com.example.moisesaichallenge.domain.repository.AlbumRepository
 import com.example.moisesaichallenge.domain.repository.MusicRepository
+import com.example.moisesaichallenge.domain.repository.PlaylistRepository
 import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
 import dagger.Binds
 import dagger.Module
@@ -49,4 +51,7 @@ abstract class DataModule {
 
     @Binds @Singleton
     abstract fun bindRecentlyPlayedRepository(impl: RecentlyPlayedRepositoryImpl): RecentlyPlayedRepository
+
+    @Binds @Singleton
+    abstract fun bindPlaylistRepository(impl: PlaylistRepositoryImpl): PlaylistRepository
 }

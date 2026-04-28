@@ -1,11 +1,11 @@
 package com.example.moisesaichallenge.data.repository
 
 import com.example.moisesaichallenge.core.network.NetworkResult
-import com.example.moisesaichallenge.core.pagination.PaginationParams
+import com.example.moisesaichallenge.core.pagination.PaginationParams.Companion.PAGE_SIZE
 import com.example.moisesaichallenge.data.local.TrackLocalDataSource
 import com.example.moisesaichallenge.data.network.datasource.MusicRemoteDataSource
 import com.example.moisesaichallenge.data.network.model.TrackDto
-import com.example.moisesaichallenge.domain.model.SearchEmission
+import com.example.moisesaichallenge.domain.model.SearchResult
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.domain.repository.MusicRepository
 import kotlinx.coroutines.flow.Flow
@@ -17,22 +17,34 @@ class MusicRepositoryImpl @Inject constructor(
     private val trackCache: TrackLocalDataSource
 ) : MusicRepository {
 
-    override fun searchTracks(
-        query: String,
-        paginationParams: PaginationParams
-    ): Flow<SearchEmission> = flow {
-        if (paginationParams.offset == 0) {
-            val cached = trackCache.search(query)
-            if (cached.isNotEmpty()) emit(SearchEmission.Local(cached))
-        }
+    override fun searchTracks(query: String, page: Int): Flow<SearchResult> = flow {
+        val offset = (page - 1) * PAGE_SIZE
 
-        when (val result = remoteDataSource.searchTracks(query, paginationParams)) {
-            is NetworkResult.Success -> {
-                val tracks = result.data.items.mapNotNull { it.toDomain() }
-                trackCache.addAll(tracks)
-                emit(SearchEmission.Remote(tracks, result.data.hasMore))
+        if (page == 1) {
+            val cached = trackCache.search(query)
+            if (cached.isNotEmpty()) {
+                emit(SearchResult.Success(cached.take(PAGE_SIZE), hasMore = cached.size > PAGE_SIZE))
             }
-            is NetworkResult.Error -> emit(SearchEmission.Error(result.throwable))
+
+            when (val result = remoteDataSource.searchTracks(query)) {
+                is NetworkResult.Success -> {
+                    val tracks = result.data.mapNotNull { it.toDomain() }
+                    trackCache.addAll(tracks)
+                    val allCached = trackCache.search(query)
+                    emit(SearchResult.Success(
+                        tracks = allCached.take(PAGE_SIZE),
+                        hasMore = allCached.size > PAGE_SIZE
+                    ))
+                }
+                is NetworkResult.Error -> emit(SearchResult.Error(result.throwable))
+            }
+        } else {
+            val allCached = trackCache.search(query)
+            val slice = allCached.drop(offset).take(PAGE_SIZE)
+            emit(SearchResult.Success(
+                tracks = slice,
+                hasMore = allCached.size > offset + PAGE_SIZE
+            ))
         }
     }
 

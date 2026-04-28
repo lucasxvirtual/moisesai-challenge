@@ -1,15 +1,14 @@
-package com.example.moisesaichallenge.presentation.album
+package com.example.moisesaichallenge.presentation.playlists
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.moisesaichallenge.core.playback.PlaybackManager
-import com.example.moisesaichallenge.domain.model.AlbumResult
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.domain.usecase.GetAlbumUseCase
+import com.example.moisesaichallenge.domain.usecase.GetPlaylistsUseCase
 import com.example.moisesaichallenge.domain.usecase.RecordTrackPlayedUseCase
-import com.example.moisesaichallenge.navigation.Album
+import com.example.moisesaichallenge.navigation.PlaylistDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,61 +23,46 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AlbumViewModel @Inject constructor(
+class PlaylistDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getAlbumUseCase: GetAlbumUseCase,
+    getPlaylistsUseCase: GetPlaylistsUseCase,
     private val playbackManager: PlaybackManager,
     private val recordTrackPlayedUseCase: RecordTrackPlayedUseCase
 ) : ViewModel() {
 
-    private val collectionId: Long = savedStateHandle.toRoute<Album>().collectionId
+    private val playlistId: Long = savedStateHandle.toRoute<PlaylistDetail>().playlistId
 
-    private val _uiState = MutableStateFlow(AlbumUiState(isLoading = true))
-    val uiState: StateFlow<AlbumUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(PlaylistDetailUiState())
+    val uiState: StateFlow<PlaylistDetailUiState> = _uiState.asStateFlow()
 
     private val _navigateToPlayer = MutableSharedFlow<Unit>(replay = 0)
     val navigateToPlayer: SharedFlow<Unit> = _navigateToPlayer.asSharedFlow()
 
     init {
-        loadAlbum()
+        getPlaylistsUseCase()
+            .onEach { playlists ->
+                _uiState.update { it.copy(playlist = playlists.find { p -> p.id == playlistId }) }
+            }
+            .launchIn(viewModelScope)
+
         playbackManager.currentTrack
             .onEach { track -> _uiState.update { it.copy(currentTrackId = track?.id) } }
             .launchIn(viewModelScope)
+
         playbackManager.isPlaying
             .onEach { playing -> _uiState.update { it.copy(isPlaying = playing) } }
             .launchIn(viewModelScope)
     }
 
-    fun onPlayPauseClick() {
-        if (playbackManager.isPlaying.value) playbackManager.pause() else playbackManager.play()
-    }
-
     fun onTrackClick(track: Track) {
-        val tracks = _uiState.value.album?.tracks ?: return
+        val tracks = _uiState.value.playlist?.tracks ?: return
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
         recordTrackPlayedUseCase(track)
         playbackManager.setQueueKeepingCurrent(tracks, index)
         viewModelScope.launch { _navigateToPlayer.emit(Unit) }
     }
 
-    private fun loadAlbum() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = getAlbumUseCase(collectionId)) {
-                is AlbumResult.Success -> _uiState.update {
-                    it.copy(album = result.album, isLoading = false)
-                }
-                is AlbumResult.Error -> {
-                    val offline = result.throwable is java.io.IOException
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isOffline = offline,
-                            error = if (offline) null else result.throwable.message ?: "Unexpected error"
-                        )
-                    }
-                }
-            }
-        }
+    fun onPlayPauseClick() {
+        if (playbackManager.isPlaying.value) playbackManager.pause() else playbackManager.play()
     }
 }

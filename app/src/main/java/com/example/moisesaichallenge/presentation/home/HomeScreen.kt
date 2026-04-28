@@ -1,8 +1,12 @@
 package com.example.moisesaichallenge.presentation.home
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,18 +15,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -40,23 +52,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.moisesaichallenge.domain.model.Playlist
 import com.example.moisesaichallenge.domain.model.Track
+import com.example.moisesaichallenge.presentation.components.PlaylistArtwork
 import com.example.moisesaichallenge.presentation.components.TrackItem
 import com.example.moisesaichallenge.presentation.components.TrackOptionsBottomSheet
-import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
+import com.example.moisesaichallenge.presentation.playlists.PlaylistsViewModel
 
+private enum class HomeTab { Search, Playlists }
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToPlayer: () -> Unit,
     onNavigateToAlbum: (Long) -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    onNavigateToCreatePlaylist: () -> Unit,
+    onNavigateToPlaylist: (Long) -> Unit,
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    playlistsViewModel: PlaylistsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by homeViewModel.uiState.collectAsState()
+    val playlists by playlistsViewModel.playlists.collectAsState()
     val listState = rememberLazyListState()
+
+    var selectedTab by remember { mutableStateOf(HomeTab.Search) }
     var selectedTrack by remember { mutableStateOf<Track?>(null) }
+    var isSearchVisible by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val isKeyboardVisible = WindowInsets.isImeVisible
 
     val shouldLoadMore by remember {
         derivedStateOf {
@@ -67,48 +93,15 @@ fun HomeScreen(
     }
 
     LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) viewModel.loadNextPage()
+        if (shouldLoadMore) homeViewModel.loadNextPage()
     }
 
     LaunchedEffect(Unit) {
-        viewModel.navigateToPlayer.collect { onNavigateToPlayer() }
+        homeViewModel.navigateToPlayer.collect { onNavigateToPlayer() }
     }
 
-    HomeScreenContent(
-        uiState = uiState,
-        listState = listState,
-        selectedTrack = selectedTrack,
-        onQueryChange = viewModel::onQueryChange,
-        onTrackClick = { viewModel.onTrackClick(it) },
-        onMoreClick = { selectedTrack = it },
-        onPlayPauseClick = viewModel::onPlayPauseClick,
-        onDismissBottomSheet = { selectedTrack = null },
-        onNavigateToAlbum = onNavigateToAlbum
-    )
-}
-
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
-@Composable
-private fun HomeScreenContent(
-    uiState: HomeUiState,
-    listState: LazyListState,
-    selectedTrack: Track?,
-    onQueryChange: (String) -> Unit,
-    onTrackClick: (Track) -> Unit,
-    onMoreClick: (Track) -> Unit,
-    onPlayPauseClick: () -> Unit = {},
-    onDismissBottomSheet: () -> Unit,
-    onNavigateToAlbum: (Long) -> Unit = {},
-    initialSearchVisible: Boolean = false
-) {
-    var isSearchVisible by remember { mutableStateOf(initialSearchVisible) }
-    val focusRequester = remember { FocusRequester() }
-    val isKeyboardVisible = WindowInsets.isImeVisible
-
     LaunchedEffect(isKeyboardVisible) {
-        if (!isKeyboardVisible && uiState.query.isBlank()) {
-            isSearchVisible = false
-        }
+        if (!isKeyboardVisible && uiState.query.isBlank()) isSearchVisible = false
     }
 
     LaunchedEffect(isSearchVisible) {
@@ -117,85 +110,197 @@ private fun HomeScreenContent(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Songs",
-                        style = MaterialTheme.typography.displayMedium
-                    )
-                },
-                actions = {
-                    if (!isSearchVisible) {
-                        IconButton(onClick = { isSearchVisible = true }) {
+            when (selectedTab) {
+                HomeTab.Search -> TopAppBar(
+                    title = { Text("Songs", style = MaterialTheme.typography.displayMedium) },
+                    actions = {
+                        if (!isSearchVisible) {
+                            IconButton(onClick = { isSearchVisible = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                HomeTab.Playlists -> TopAppBar(
+                    title = { Text("Playlists", style = MaterialTheme.typography.displayMedium) },
+                    actions = {
+                        IconButton(onClick = onNavigateToCreatePlaylist) {
                             Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Create playlist",
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
-                    }
-                },
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+        },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = selectedTab == HomeTab.Search,
+                    onClick = { selectedTab = HomeTab.Search },
+                    icon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    label = { Text("Search") }
+                )
+                NavigationBarItem(
+                    selected = selectedTab == HomeTab.Playlists,
+                    onClick = { selectedTab = HomeTab.Playlists },
+                    icon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null) },
+                    label = { Text("Playlists") }
+                )
+            }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp)
-        ) {
-            if (isSearchVisible) {
-                OutlinedTextField(
-                    value = uiState.query,
-                    onValueChange = onQueryChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester),
-                    placeholder = { Text("Search songs, artists...") },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = null)
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(20),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        cursorColor = MaterialTheme.colorScheme.onSurface,
-                    )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (uiState.query.isBlank()) {
-                RecentlyPlayedSection(
-                    uiState = uiState,
-                    onTrackClick = onTrackClick,
-                    onMoreClick = onMoreClick,
-                    onPlayPauseClick = onPlayPauseClick
-                )
-            } else {
-                SearchResultsSection(
-                    uiState = uiState,
-                    listState = listState,
-                    onTrackClick = onTrackClick,
-                    onMoreClick = onMoreClick,
-                    onPlayPauseClick = onPlayPauseClick
-                )
-            }
+        when (selectedTab) {
+            HomeTab.Search -> SearchTabContent(
+                uiState = uiState,
+                listState = listState,
+                innerPadding = innerPadding,
+                isSearchVisible = isSearchVisible,
+                focusRequester = focusRequester,
+                onQueryChange = homeViewModel::onQueryChange,
+                onTrackClick = { homeViewModel.onTrackClick(it) },
+                onMoreClick = { selectedTrack = it },
+                onPlayPauseClick = homeViewModel::onPlayPauseClick
+            )
+            HomeTab.Playlists -> PlaylistsTabContent(
+                playlists = playlists,
+                innerPadding = innerPadding,
+                onPlaylistClick = onNavigateToPlaylist
+            )
         }
     }
 
     selectedTrack?.let { track ->
         TrackOptionsBottomSheet(
             track = track,
-            onDismiss = onDismissBottomSheet,
+            onDismiss = { selectedTrack = null },
             onViewAlbum = {
-                onDismissBottomSheet()
+                selectedTrack = null
                 onNavigateToAlbum(track.collectionId)
             }
         )
+    }
+}
+
+@Composable
+private fun SearchTabContent(
+    uiState: HomeUiState,
+    listState: LazyListState,
+    innerPadding: PaddingValues,
+    isSearchVisible: Boolean,
+    focusRequester: FocusRequester,
+    onQueryChange: (String) -> Unit,
+    onTrackClick: (Track) -> Unit,
+    onMoreClick: (Track) -> Unit,
+    onPlayPauseClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(horizontal = 24.dp)
+    ) {
+        if (isSearchVisible) {
+            OutlinedTextField(
+                value = uiState.query,
+                onValueChange = onQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                placeholder = { Text("Search songs, artists...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (uiState.query.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(20),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    cursorColor = MaterialTheme.colorScheme.onSurface,
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (uiState.query.isBlank()) {
+            RecentlyPlayedSection(uiState, onTrackClick, onMoreClick, onPlayPauseClick)
+        } else {
+            SearchResultsSection(uiState, listState, onTrackClick, onMoreClick, onPlayPauseClick)
+        }
+    }
+}
+
+@Composable
+private fun PlaylistsTabContent(
+    playlists: List<Playlist>,
+    innerPadding: PaddingValues,
+    onPlaylistClick: (Long) -> Unit
+) {
+    if (playlists.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No playlists yet. Tap + to create one.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        LazyColumn(
+            contentPadding = innerPadding,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
+            items(playlists, key = { it.id }) { playlist ->
+                PlaylistRow(playlist, onClick = { onPlaylistClick(playlist.id) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaylistRow(playlist: Playlist, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PlaylistArtwork(playlist = playlist, size = 52.dp)
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = playlist.name,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${playlist.tracks.size} ${if (playlist.tracks.size == 1) "track" else "tracks"}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
@@ -204,21 +309,13 @@ private fun RecentlyPlayedSection(
     uiState: HomeUiState,
     onTrackClick: (Track) -> Unit,
     onMoreClick: (Track) -> Unit,
-    onPlayPauseClick: () -> Unit = {}
+    onPlayPauseClick: () -> Unit
 ) {
-    Text(
-        text = "Recently Played",
-        style = MaterialTheme.typography.titleMedium,
-    )
-
+    Text(text = "Recently Played", style = MaterialTheme.typography.titleMedium)
     Spacer(modifier = Modifier.height(4.dp))
 
     if (uiState.recentlyPlayed.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = "No recently played songs yet",
                 style = MaterialTheme.typography.bodyMedium,
@@ -247,7 +344,7 @@ private fun SearchResultsSection(
     listState: LazyListState,
     onTrackClick: (Track) -> Unit,
     onMoreClick: (Track) -> Unit,
-    onPlayPauseClick: () -> Unit = {}
+    onPlayPauseClick: () -> Unit
 ) {
     when {
         uiState.isLoading && uiState.tracks.isEmpty() -> {
@@ -255,13 +352,8 @@ private fun SearchResultsSection(
                 CircularProgressIndicator()
             }
         }
-
         uiState.error != null -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = uiState.error,
                     style = MaterialTheme.typography.bodyMedium,
@@ -269,13 +361,8 @@ private fun SearchResultsSection(
                 )
             }
         }
-
         uiState.tracks.isEmpty() -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "No results for \"${uiState.query}\"",
                     style = MaterialTheme.typography.bodyMedium,
@@ -283,7 +370,6 @@ private fun SearchResultsSection(
                 )
             }
         }
-
         else -> {
             LazyColumn(state = listState) {
                 items(items = uiState.tracks, key = { it.id }) { track ->
@@ -311,97 +397,5 @@ private fun SearchResultsSection(
                 }
             }
         }
-    }
-}
-
-// region Previews
-
-private val previewTracks = listOf(
-    Track(1L, "Bohemian Rhapsody", "Queen", "A Night at the Opera", null, null, null, 354_000L, "Rock"),
-    Track(2L, "Don't Stop Me Now", "Queen", "Jazz", null, null, null, 210_000L, "Rock"),
-    Track(3L, "We Will Rock You", "Queen", "News of the World", null, null, null, 122_000L, "Rock"),
-    Track(4L, "Somebody to Love", "Queen", "A Day at the Races", null, null, null, 295_000L, "Rock")
-)
-
-@PreviewLightDark
-@Composable
-private fun HomeScreenRecentlyPlayedPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
-        HomeScreenContent(
-            uiState = HomeUiState(query = "", recentlyPlayed = previewTracks),
-            listState = rememberLazyListState(),
-            selectedTrack = null,
-            onQueryChange = {},
-            onTrackClick = {},
-            onMoreClick = {},
-            onDismissBottomSheet = {}
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun HomeScreenEmptyRecentlyPlayedPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
-        HomeScreenContent(
-            uiState = HomeUiState(query = "", recentlyPlayed = emptyList()),
-            listState = rememberLazyListState(),
-            selectedTrack = null,
-            onQueryChange = {},
-            onTrackClick = {},
-            onMoreClick = {},
-            onDismissBottomSheet = {}
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun HomeScreenSearchActivePreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
-        HomeScreenContent(
-            uiState = HomeUiState(query = "Queen", tracks = previewTracks),
-            listState = rememberLazyListState(),
-            selectedTrack = null,
-            onQueryChange = {},
-            onTrackClick = {},
-            onMoreClick = {},
-            onDismissBottomSheet = {},
-            initialSearchVisible = true
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun HomeScreenSearchLoadingPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
-        HomeScreenContent(
-            uiState = HomeUiState(query = "Queen", isLoading = true),
-            listState = rememberLazyListState(),
-            selectedTrack = null,
-            onQueryChange = {},
-            onTrackClick = {},
-            onMoreClick = {},
-            onDismissBottomSheet = {},
-            initialSearchVisible = true
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun HomeScreenSearchErrorPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
-        HomeScreenContent(
-            uiState = HomeUiState(query = "Queen", error = "No internet connection"),
-            listState = rememberLazyListState(),
-            selectedTrack = null,
-            onQueryChange = {},
-            onTrackClick = {},
-            onMoreClick = {},
-            onDismissBottomSheet = {},
-            initialSearchVisible = true
-        )
     }
 }

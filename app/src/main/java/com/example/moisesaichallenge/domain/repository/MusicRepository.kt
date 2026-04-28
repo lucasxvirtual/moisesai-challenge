@@ -1,12 +1,8 @@
 package com.example.moisesaichallenge.domain.repository
 
-import com.example.moisesaichallenge.core.pagination.PaginationParams
-import com.example.moisesaichallenge.domain.model.SearchEmission
+import com.example.moisesaichallenge.domain.model.SearchResult
 import kotlinx.coroutines.flow.Flow
 
 interface MusicRepository {
-    fun searchTracks(
-        query: String,
-        paginationParams: PaginationParams
-    ): Flow<SearchEmission>
+    fun searchTracks(query: String, page: Int): Flow<SearchResult>
 }

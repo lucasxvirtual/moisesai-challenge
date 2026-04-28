@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 val isOnline by connectionStatusProvider.isOnline.collectAsState()
                 Box(modifier = Modifier.fillMaxSize()) {
                     NavGraph()
-                    if (!isOnline) NoConnectionBanner()
+                    NoConnectionBanner(isOnline = isOnline)
                 }
             }
         }
