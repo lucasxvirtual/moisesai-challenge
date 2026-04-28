@@ -3,8 +3,8 @@ package com.example.moisesaichallenge.presentation.album
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.moisesaichallenge.core.network.NetworkResult
 import com.example.moisesaichallenge.core.playback.PlaybackManager
+import com.example.moisesaichallenge.domain.model.AlbumResult
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.domain.usecase.GetAlbumUseCase
 import com.example.moisesaichallenge.domain.usecase.RecordTrackPlayedUseCase
@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,13 +39,23 @@ class AlbumViewModel @Inject constructor(
 
     init {
         loadAlbum()
+        playbackManager.currentTrack
+            .onEach { track -> _uiState.update { it.copy(currentTrackId = track?.id) } }
+            .launchIn(viewModelScope)
+        playbackManager.isPlaying
+            .onEach { playing -> _uiState.update { it.copy(isPlaying = playing) } }
+            .launchIn(viewModelScope)
+    }
+
+    fun onPlayPauseClick() {
+        if (playbackManager.isPlaying.value) playbackManager.pause() else playbackManager.play()
     }
 
     fun onTrackClick(track: Track) {
         val tracks = _uiState.value.album?.tracks ?: return
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
         recordTrackPlayedUseCase(track)
-        playbackManager.setQueue(tracks, index)
+        playbackManager.setQueueKeepingCurrent(tracks, index)
         viewModelScope.launch { _navigateToPlayer.emit(Unit) }
     }
 
@@ -51,11 +63,18 @@ class AlbumViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             when (val result = getAlbumUseCase(collectionId)) {
-                is NetworkResult.Success -> _uiState.update {
-                    it.copy(album = result.data, isLoading = false)
+                is AlbumResult.Success -> _uiState.update {
+                    it.copy(album = result.album, isLoading = false)
                 }
-                is NetworkResult.Error -> _uiState.update {
-                    it.copy(error = result.throwable.message ?: "Unexpected error", isLoading = false)
+                is AlbumResult.Error -> {
+                    val offline = result.throwable is java.io.IOException
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isOffline = offline,
+                            error = if (offline) null else result.throwable.message ?: "Unexpected error"
+                        )
+                    }
                 }
             }
         }

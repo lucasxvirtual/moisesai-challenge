@@ -1,7 +1,5 @@
-package com.example.moisesaichallenge.presentation.home.components
+package com.example.moisesaichallenge.presentation.components
 
-import android.R.attr.onClick
-import android.R.attr.track
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +12,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -32,11 +33,14 @@ import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
 
 @Composable
-fun RecentlyPlayedItem(
+fun TrackItem(
     track: Track,
     onClick: () -> Unit,
     onMoreClick: (() -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isNowPlaying: Boolean = false,
+    isPlaying: Boolean = false,
+    onPlayPauseClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
@@ -63,6 +67,7 @@ fun RecentlyPlayedItem(
             Text(
                 text = track.name,
                 style = MaterialTheme.typography.bodyLarge,
+                color = if (isNowPlaying) Color.Green else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -73,6 +78,17 @@ fun RecentlyPlayedItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+        }
+
+        if (isNowPlaying) {
+            IconButton(onClick = { onPlayPauseClick?.invoke() }) {
+                Icon(
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
 
         onMoreClick?.let {
@@ -115,10 +131,10 @@ private val previewTrackLongName = Track(
 
 @PreviewLightDark
 @Composable
-private fun RecentlyPlayedItemPreview() {
+private fun TrackItemPreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         Surface {
-            RecentlyPlayedItem(
+            TrackItem(
                 track = previewTrack,
                 onClick = {},
                 onMoreClick = {}
@@ -129,10 +145,10 @@ private fun RecentlyPlayedItemPreview() {
 
 @PreviewLightDark
 @Composable
-private fun RecentlyPlayedItemLongNamePreview() {
+private fun TrackItemLongNamePreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         Surface {
-            RecentlyPlayedItem(
+            TrackItem(
                 track = previewTrackLongName,
                 onClick = {},
                 onMoreClick = {}
@@ -140,5 +156,3 @@ private fun RecentlyPlayedItemLongNamePreview() {
         }
     }
 }
-
-// endregion

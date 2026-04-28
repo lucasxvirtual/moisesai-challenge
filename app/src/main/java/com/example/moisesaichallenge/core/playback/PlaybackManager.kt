@@ -1,7 +1,10 @@
 package com.example.moisesaichallenge.core.playback
 
+import android.content.Context
 import android.media.MediaPlayer
+import androidx.core.content.ContextCompat
 import com.example.moisesaichallenge.domain.model.Track
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,7 +22,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PlaybackManager @Inject constructor() {
+class PlaybackManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var mediaPlayer: MediaPlayer? = null
@@ -47,6 +52,19 @@ class PlaybackManager @Inject constructor() {
     fun setQueue(tracks: List<Track>, startIndex: Int) {
         _queue.value = tracks
         loadTrack(startIndex)
+        PlaybackService.start(context)
+    }
+
+    fun setQueueKeepingCurrent(tracks: List<Track>, startIndex: Int) {
+        val clickedId = tracks.getOrNull(startIndex)?.id
+        val alreadyCurrent = currentTrack.value?.id == clickedId
+        _queue.value = tracks
+        if (alreadyCurrent) {
+            _currentIndex.value = startIndex
+        } else {
+            loadTrack(startIndex)
+        }
+        PlaybackService.start(context)
     }
 
     fun play() {

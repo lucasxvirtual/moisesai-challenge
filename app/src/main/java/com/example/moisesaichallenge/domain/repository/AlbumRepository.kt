@@ -1,8 +1,7 @@
 package com.example.moisesaichallenge.domain.repository
 
-import com.example.moisesaichallenge.core.network.NetworkResult
-import com.example.moisesaichallenge.domain.model.Album
+import com.example.moisesaichallenge.domain.model.AlbumResult
 
 interface AlbumRepository {
-    suspend fun getAlbum(collectionId: Long): NetworkResult<Album>
+    suspend fun getAlbum(collectionId: Long): AlbumResult
 }

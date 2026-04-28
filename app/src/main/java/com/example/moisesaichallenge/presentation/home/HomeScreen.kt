@@ -44,17 +44,15 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.presentation.home.components.RecentlyPlayedItem
-import com.example.moisesaichallenge.presentation.home.components.TrackOptionsBottomSheet
-import com.example.moisesaichallenge.presentation.search.SearchUiState
-import com.example.moisesaichallenge.presentation.search.SearchViewModel
+import com.example.moisesaichallenge.presentation.components.TrackItem
+import com.example.moisesaichallenge.presentation.components.TrackOptionsBottomSheet
 import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
 
 @Composable
 fun HomeScreen(
     onNavigateToPlayer: () -> Unit,
     onNavigateToAlbum: (Long) -> Unit,
-    viewModel: SearchViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
@@ -83,6 +81,7 @@ fun HomeScreen(
         onQueryChange = viewModel::onQueryChange,
         onTrackClick = { viewModel.onTrackClick(it) },
         onMoreClick = { selectedTrack = it },
+        onPlayPauseClick = viewModel::onPlayPauseClick,
         onDismissBottomSheet = { selectedTrack = null },
         onNavigateToAlbum = onNavigateToAlbum
     )
@@ -91,12 +90,13 @@ fun HomeScreen(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenContent(
-    uiState: SearchUiState,
+    uiState: HomeUiState,
     listState: LazyListState,
     selectedTrack: Track?,
     onQueryChange: (String) -> Unit,
     onTrackClick: (Track) -> Unit,
     onMoreClick: (Track) -> Unit,
+    onPlayPauseClick: () -> Unit = {},
     onDismissBottomSheet: () -> Unit,
     onNavigateToAlbum: (Long) -> Unit = {},
     initialSearchVisible: Boolean = false
@@ -172,14 +172,16 @@ private fun HomeScreenContent(
                 RecentlyPlayedSection(
                     uiState = uiState,
                     onTrackClick = onTrackClick,
-                    onMoreClick = onMoreClick
+                    onMoreClick = onMoreClick,
+                    onPlayPauseClick = onPlayPauseClick
                 )
             } else {
                 SearchResultsSection(
                     uiState = uiState,
                     listState = listState,
                     onTrackClick = onTrackClick,
-                    onMoreClick = onMoreClick
+                    onMoreClick = onMoreClick,
+                    onPlayPauseClick = onPlayPauseClick
                 )
             }
         }
@@ -199,9 +201,10 @@ private fun HomeScreenContent(
 
 @Composable
 private fun RecentlyPlayedSection(
-    uiState: SearchUiState,
+    uiState: HomeUiState,
     onTrackClick: (Track) -> Unit,
-    onMoreClick: (Track) -> Unit
+    onMoreClick: (Track) -> Unit,
+    onPlayPauseClick: () -> Unit = {}
 ) {
     Text(
         text = "Recently Played",
@@ -225,10 +228,13 @@ private fun RecentlyPlayedSection(
     } else {
         LazyColumn {
             items(items = uiState.recentlyPlayed, key = { it.id }) { track ->
-                RecentlyPlayedItem(
+                TrackItem(
                     track = track,
                     onClick = { onTrackClick(track) },
-                    onMoreClick = { onMoreClick(track) }
+                    onMoreClick = { onMoreClick(track) },
+                    isNowPlaying = track.id == uiState.currentTrackId,
+                    isPlaying = uiState.isPlaying && track.id == uiState.currentTrackId,
+                    onPlayPauseClick = onPlayPauseClick
                 )
             }
         }
@@ -237,13 +243,14 @@ private fun RecentlyPlayedSection(
 
 @Composable
 private fun SearchResultsSection(
-    uiState: SearchUiState,
+    uiState: HomeUiState,
     listState: LazyListState,
     onTrackClick: (Track) -> Unit,
-    onMoreClick: (Track) -> Unit
+    onMoreClick: (Track) -> Unit,
+    onPlayPauseClick: () -> Unit = {}
 ) {
     when {
-        uiState.isLoading -> {
+        uiState.isLoading && uiState.tracks.isEmpty() -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -280,10 +287,13 @@ private fun SearchResultsSection(
         else -> {
             LazyColumn(state = listState) {
                 items(items = uiState.tracks, key = { it.id }) { track ->
-                    RecentlyPlayedItem(
+                    TrackItem(
                         track = track,
                         onClick = { onTrackClick(track) },
-                        onMoreClick = { onMoreClick(track) }
+                        onMoreClick = { onMoreClick(track) },
+                        isNowPlaying = track.id == uiState.currentTrackId,
+                        isPlaying = uiState.isPlaying && track.id == uiState.currentTrackId,
+                        onPlayPauseClick = onPlayPauseClick
                     )
                 }
 
@@ -318,7 +328,7 @@ private val previewTracks = listOf(
 private fun HomeScreenRecentlyPlayedPreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         HomeScreenContent(
-            uiState = SearchUiState(query = "", recentlyPlayed = previewTracks),
+            uiState = HomeUiState(query = "", recentlyPlayed = previewTracks),
             listState = rememberLazyListState(),
             selectedTrack = null,
             onQueryChange = {},
@@ -334,7 +344,7 @@ private fun HomeScreenRecentlyPlayedPreview() {
 private fun HomeScreenEmptyRecentlyPlayedPreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         HomeScreenContent(
-            uiState = SearchUiState(query = "", recentlyPlayed = emptyList()),
+            uiState = HomeUiState(query = "", recentlyPlayed = emptyList()),
             listState = rememberLazyListState(),
             selectedTrack = null,
             onQueryChange = {},
@@ -350,7 +360,7 @@ private fun HomeScreenEmptyRecentlyPlayedPreview() {
 private fun HomeScreenSearchActivePreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         HomeScreenContent(
-            uiState = SearchUiState(query = "Queen", tracks = previewTracks),
+            uiState = HomeUiState(query = "Queen", tracks = previewTracks),
             listState = rememberLazyListState(),
             selectedTrack = null,
             onQueryChange = {},
@@ -367,7 +377,7 @@ private fun HomeScreenSearchActivePreview() {
 private fun HomeScreenSearchLoadingPreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         HomeScreenContent(
-            uiState = SearchUiState(query = "Queen", isLoading = true),
+            uiState = HomeUiState(query = "Queen", isLoading = true),
             listState = rememberLazyListState(),
             selectedTrack = null,
             onQueryChange = {},
@@ -384,7 +394,7 @@ private fun HomeScreenSearchLoadingPreview() {
 private fun HomeScreenSearchErrorPreview() {
     MoisesaiChallengeTheme(dynamicColor = false) {
         HomeScreenContent(
-            uiState = SearchUiState(query = "Queen", error = "No internet connection"),
+            uiState = HomeUiState(query = "Queen", error = "No internet connection"),
             listState = rememberLazyListState(),
             selectedTrack = null,
             onQueryChange = {},

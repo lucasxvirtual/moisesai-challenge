@@ -1,40 +1,39 @@
 package com.example.moisesaichallenge.data.repository
 
 import com.example.moisesaichallenge.core.network.NetworkResult
-import com.example.moisesaichallenge.core.network.map
-import com.example.moisesaichallenge.core.pagination.PaginatedResponse
 import com.example.moisesaichallenge.core.pagination.PaginationParams
-import com.example.moisesaichallenge.data.cache.MusicCache
+import com.example.moisesaichallenge.data.local.TrackLocalDataSource
 import com.example.moisesaichallenge.data.network.datasource.MusicRemoteDataSource
 import com.example.moisesaichallenge.data.network.model.TrackDto
+import com.example.moisesaichallenge.domain.model.SearchEmission
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.domain.repository.MusicRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class MusicRepositoryImpl @Inject constructor(
     private val remoteDataSource: MusicRemoteDataSource,
-    private val cache: MusicCache
+    private val trackCache: TrackLocalDataSource
 ) : MusicRepository {
 
-    override suspend fun searchTracks(
+    override fun searchTracks(
         query: String,
         paginationParams: PaginationParams
-    ): NetworkResult<PaginatedResponse<Track>> {
-        cache.get(query, paginationParams)?.let { return NetworkResult.Success(it) }
-
-        val networkResult = remoteDataSource.searchTracks(query, paginationParams).map { paginated ->
-            PaginatedResponse(
-                items = paginated.items.mapNotNull { it.toDomain() },
-                hasMore = paginated.hasMore,
-                currentPaginationParams = paginated.currentPaginationParams
-            ).also { cache.put(query, paginationParams, it) }
+    ): Flow<SearchEmission> = flow {
+        if (paginationParams.offset == 0) {
+            val cached = trackCache.search(query)
+            if (cached.isNotEmpty()) emit(SearchEmission.Local(cached))
         }
 
-        if (networkResult is NetworkResult.Error) {
-            cache.getStaleOrNull(query, paginationParams)?.let { return NetworkResult.Success(it) }
+        when (val result = remoteDataSource.searchTracks(query, paginationParams)) {
+            is NetworkResult.Success -> {
+                val tracks = result.data.items.mapNotNull { it.toDomain() }
+                trackCache.addAll(tracks)
+                emit(SearchEmission.Remote(tracks, result.data.hasMore))
+            }
+            is NetworkResult.Error -> emit(SearchEmission.Error(result.throwable))
         }
-
-        return networkResult
     }
 
     private fun TrackDto.toDomain(): Track? {

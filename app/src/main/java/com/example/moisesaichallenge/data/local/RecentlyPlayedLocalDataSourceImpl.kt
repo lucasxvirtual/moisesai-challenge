@@ -3,7 +3,7 @@ package com.example.moisesaichallenge.data.local
 import com.example.moisesaichallenge.domain.model.Track
 import javax.inject.Inject
 
-class InMemoryRecentlyPlayedDataSource @Inject constructor() : RecentlyPlayedLocalDataSource {
+class RecentlyPlayedLocalDataSourceImpl @Inject constructor() : RecentlyPlayedLocalDataSource {
 
     private val tracks = ArrayDeque<Track>()
 

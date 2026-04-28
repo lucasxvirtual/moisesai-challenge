@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.home.components
+package com.example.moisesaichallenge.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

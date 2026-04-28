@@ -1,26 +1,32 @@
 package com.example.moisesaichallenge.data.repository
 
 import com.example.moisesaichallenge.core.network.NetworkResult
+import com.example.moisesaichallenge.data.local.AlbumLocalDataSource
 import com.example.moisesaichallenge.data.network.datasource.AlbumRemoteDataSource
 import com.example.moisesaichallenge.data.network.model.AlbumItemDto
 import com.example.moisesaichallenge.data.network.model.AlbumLookupResponseDto
 import com.example.moisesaichallenge.domain.model.Album
+import com.example.moisesaichallenge.domain.model.AlbumResult
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.domain.repository.AlbumRepository
 import javax.inject.Inject
 
 class AlbumRepositoryImpl @Inject constructor(
-    private val remoteDataSource: AlbumRemoteDataSource
+    private val remoteDataSource: AlbumRemoteDataSource,
+    private val albumLocalDataSource: AlbumLocalDataSource
 ) : AlbumRepository {
 
-    override suspend fun getAlbum(collectionId: Long): NetworkResult<Album> {
+    override suspend fun getAlbum(collectionId: Long): AlbumResult {
+        albumLocalDataSource.get(collectionId)?.let { return AlbumResult.Success(it) }
+
         return when (val result = remoteDataSource.lookupAlbum(collectionId)) {
             is NetworkResult.Success -> {
                 val album = result.data.toDomain()
-                    ?: return NetworkResult.Error(IllegalStateException("Album not found"))
-                NetworkResult.Success(album)
+                    ?: return AlbumResult.Error(IllegalStateException("Album not found"))
+                albumLocalDataSource.put(album)
+                AlbumResult.Success(album)
             }
-            is NetworkResult.Error -> result
+            is NetworkResult.Error -> AlbumResult.Error(result.throwable)
         }
     }
 

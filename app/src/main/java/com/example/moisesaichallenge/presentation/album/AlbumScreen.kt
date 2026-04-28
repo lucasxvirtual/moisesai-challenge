@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.moisesaichallenge.domain.model.Album
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.presentation.home.components.RecentlyPlayedItem
+import com.example.moisesaichallenge.presentation.components.TrackItem
 import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
 
 @Composable
@@ -58,7 +57,8 @@ fun AlbumScreen(
     AlbumScreenContent(
         uiState = uiState,
         onBack = onBack,
-        onTrackClick = viewModel::onTrackClick
+        onTrackClick = viewModel::onTrackClick,
+        onPlayPauseClick = viewModel::onPlayPauseClick
     )
 }
 
@@ -67,7 +67,8 @@ fun AlbumScreen(
 private fun AlbumScreenContent(
     uiState: AlbumUiState,
     onBack: () -> Unit,
-    onTrackClick: (Track) -> Unit
+    onTrackClick: (Track) -> Unit,
+    onPlayPauseClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -124,7 +125,10 @@ private fun AlbumScreenContent(
                 AlbumContent(
                     album = uiState.album,
                     onTrackClick = onTrackClick,
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    currentTrackId = uiState.currentTrackId,
+                    isPlaying = uiState.isPlaying,
+                    onPlayPauseClick = onPlayPauseClick
                 )
             }
         }
@@ -135,7 +139,10 @@ private fun AlbumScreenContent(
 private fun AlbumContent(
     album: Album,
     onTrackClick: (Track) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentTrackId: Long? = null,
+    isPlaying: Boolean = false,
+    onPlayPauseClick: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -182,11 +189,14 @@ private fun AlbumContent(
         }
 
         items(items = album.tracks, key = { it.id }) { track ->
-            RecentlyPlayedItem(
+            TrackItem(
                 track = track,
                 onClick = { onTrackClick(track) },
                 onMoreClick = null,
-                modifier = Modifier.padding(horizontal = 24.dp)
+                modifier = Modifier.padding(horizontal = 24.dp),
+                isNowPlaying = track.id == currentTrackId,
+                isPlaying = isPlaying && track.id == currentTrackId,
+                onPlayPauseClick = onPlayPauseClick
             )
         }
     }

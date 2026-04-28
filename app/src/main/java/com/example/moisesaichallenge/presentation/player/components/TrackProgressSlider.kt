@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.player
+package com.example.moisesaichallenge.presentation.player.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

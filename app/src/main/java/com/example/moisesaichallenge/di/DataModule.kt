@@ -1,9 +1,11 @@
 package com.example.moisesaichallenge.di
 
-import com.example.moisesaichallenge.data.cache.InMemoryMusicCache
-import com.example.moisesaichallenge.data.cache.MusicCache
-import com.example.moisesaichallenge.data.local.InMemoryRecentlyPlayedDataSource
+import com.example.moisesaichallenge.data.local.AlbumLocalDataSource
+import com.example.moisesaichallenge.data.local.AlbumLocalDataSourceImpl
+import com.example.moisesaichallenge.data.local.RecentlyPlayedLocalDataSourceImpl
 import com.example.moisesaichallenge.data.local.RecentlyPlayedLocalDataSource
+import com.example.moisesaichallenge.data.local.TrackLocalDataSource
+import com.example.moisesaichallenge.data.local.TrackLocalDataSourceImpl
 import com.example.moisesaichallenge.data.network.datasource.AlbumRemoteDataSource
 import com.example.moisesaichallenge.data.network.datasource.AlbumRemoteDataSourceImpl
 import com.example.moisesaichallenge.data.network.datasource.MusicRemoteDataSource
@@ -25,16 +27,19 @@ import javax.inject.Singleton
 abstract class DataModule {
 
     @Binds @Singleton
+    abstract fun bindTrackLocalDataSource(impl: TrackLocalDataSourceImpl): TrackLocalDataSource
+
+    @Binds @Singleton
+    abstract fun bindAlbumLocalDataSource(impl: AlbumLocalDataSourceImpl): AlbumLocalDataSource
+
+    @Binds @Singleton
     abstract fun bindMusicRemoteDataSource(impl: MusicRemoteDataSourceImpl): MusicRemoteDataSource
 
     @Binds @Singleton
     abstract fun bindAlbumRemoteDataSource(impl: AlbumRemoteDataSourceImpl): AlbumRemoteDataSource
 
     @Binds @Singleton
-    abstract fun bindMusicCache(impl: InMemoryMusicCache): MusicCache
-
-    @Binds @Singleton
-    abstract fun bindRecentlyPlayedDataSource(impl: InMemoryRecentlyPlayedDataSource): RecentlyPlayedLocalDataSource
+    abstract fun bindRecentlyPlayedDataSource(impl: RecentlyPlayedLocalDataSourceImpl): RecentlyPlayedLocalDataSource
 
     @Binds @Singleton
     abstract fun bindMusicRepository(impl: MusicRepositoryImpl): MusicRepository

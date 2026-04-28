@@ -42,7 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.presentation.home.components.TrackOptionsBottomSheet
+import com.example.moisesaichallenge.presentation.components.TrackOptionsBottomSheet
+import com.example.moisesaichallenge.presentation.player.components.TrackProgressSlider
 import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
 
 @Composable
