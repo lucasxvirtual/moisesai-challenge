@@ -4,7 +4,11 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,6 +19,7 @@ import com.example.moisesaichallenge.presentation.player.PlayerScreen
 import com.example.moisesaichallenge.presentation.home.playlists.create.CreatePlaylistScreen
 import com.example.moisesaichallenge.presentation.home.playlists.details.PlaylistDetailScreen
 import com.example.moisesaichallenge.presentation.splash.SplashScreen
+import com.example.moisesaichallenge.presentation.tablet.TabletLayout
 
 private const val TRANSITION_DURATION = 350
 
@@ -63,13 +68,19 @@ fun NavGraph() {
             )
         }
         composable<Home> {
-            HomeScreen(
-                onNavigateToPlayer = { navController.navigate(Player) },
-                onNavigateToAlbum = { collectionId -> navController.navigate(Album(collectionId)) },
-                onNavigateToCreatePlaylist = { navController.navigate(CreatePlaylist()) },
-                onNavigateToPlaylist = { playlistId -> navController.navigate(PlaylistDetail(playlistId)) },
-                onNavigateToEditPlaylist = { playlistId -> navController.navigate(CreatePlaylist(playlistId)) }
-            )
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                if (maxWidth >= 840.dp) {
+                    TabletLayout()
+                } else {
+                    HomeScreen(
+                        onNavigateToPlayer = { navController.navigate(Player) },
+                        onNavigateToAlbum = { collectionId -> navController.navigate(Album(collectionId)) },
+                        onNavigateToCreatePlaylist = { navController.navigate(CreatePlaylist()) },
+                        onNavigateToPlaylist = { playlistId -> navController.navigate(PlaylistDetail(playlistId)) },
+                        onNavigateToEditPlaylist = { playlistId -> navController.navigate(CreatePlaylist(playlistId)) }
+                    )
+                }
+            }
         }
         composable<Player> {
             PlayerScreen(
