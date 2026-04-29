@@ -5,5 +5,5 @@ import com.example.moisesaichallenge.domain.repository.PlaylistRepository
 import javax.inject.Inject
 
 class CreatePlaylistUseCase @Inject constructor(private val repository: PlaylistRepository) {
-    operator fun invoke(name: String, tracks: List<Track>) = repository.create(name, tracks)
+    operator fun invoke(name: String, tracks: List<Track>): Long = repository.create(name, tracks)
 }

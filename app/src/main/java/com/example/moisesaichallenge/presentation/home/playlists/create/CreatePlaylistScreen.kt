@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.playlists
+package com.example.moisesaichallenge.presentation.home.playlists.create
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,18 +41,21 @@ import com.example.moisesaichallenge.presentation.components.TrackItem
 @Composable
 fun CreatePlaylistScreen(
     onBack: () -> Unit,
+    onCreated: (Long) -> Unit,
     viewModel: CreatePlaylistViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.created.collect { onBack() }
+        viewModel.created.collect { newId ->
+            if (newId == 0L) onBack() else onCreated(newId)
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Playlist") },
+                title = { Text(if (uiState.isEditMode) "Edit Playlist" else "Create Playlist") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -59,10 +63,11 @@ fun CreatePlaylistScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = viewModel::createPlaylist,
-                        enabled = uiState.name.isNotBlank()
+                        onClick = viewModel::savePlaylist,
+                        enabled = uiState.name.isNotBlank(),
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                     ) {
-                        Text("Create")
+                        Text(if (uiState.isEditMode) "Save" else "Create")
                     }
                 }
             )
@@ -79,7 +84,12 @@ fun CreatePlaylistScreen(
                 onValueChange = viewModel::onNameChange,
                 label = { Text("Playlist name") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    cursorColor = MaterialTheme.colorScheme.onSurface,
+                    focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -108,7 +118,11 @@ fun CreatePlaylistScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            val displayedTracks = if (uiState.query.isBlank()) uiState.recentlyPlayed else uiState.tracks
+            val displayedTracks = if (uiState.query.isBlank()) {
+                if (uiState.selectedTracksList.isNotEmpty()) uiState.selectedTracksList else uiState.recentlyPlayed
+            } else {
+                uiState.tracks
+            }
 
             when {
                 uiState.isLoading -> {

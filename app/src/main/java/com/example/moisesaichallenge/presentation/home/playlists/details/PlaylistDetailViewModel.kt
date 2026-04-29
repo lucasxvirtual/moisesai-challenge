@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.moisesaichallenge.core.playback.PlaybackManager
 import com.example.moisesaichallenge.domain.model.Track
+import com.example.moisesaichallenge.domain.usecase.DeletePlaylistUseCase
 import com.example.moisesaichallenge.domain.usecase.GetPlaylistsUseCase
 import com.example.moisesaichallenge.domain.usecase.RecordTrackPlayedUseCase
 import com.example.moisesaichallenge.navigation.PlaylistDetail
@@ -26,6 +27,7 @@ import javax.inject.Inject
 class PlaylistDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     getPlaylistsUseCase: GetPlaylistsUseCase,
+    private val deletePlaylistUseCase: DeletePlaylistUseCase,
     private val playbackManager: PlaybackManager,
     private val recordTrackPlayedUseCase: RecordTrackPlayedUseCase
 ) : ViewModel() {
@@ -37,6 +39,9 @@ class PlaylistDetailViewModel @Inject constructor(
 
     private val _navigateToPlayer = MutableSharedFlow<Unit>(replay = 0)
     val navigateToPlayer: SharedFlow<Unit> = _navigateToPlayer.asSharedFlow()
+
+    private val _navigateBack = MutableSharedFlow<Unit>(replay = 0)
+    val navigateBack: SharedFlow<Unit> = _navigateBack.asSharedFlow()
 
     init {
         getPlaylistsUseCase()
@@ -64,5 +69,10 @@ class PlaylistDetailViewModel @Inject constructor(
 
     fun onPlayPauseClick() {
         if (playbackManager.isPlaying.value) playbackManager.pause() else playbackManager.play()
+    }
+
+    fun deletePlaylist() {
+        deletePlaylistUseCase(playlistId)
+        viewModelScope.launch { _navigateBack.emit(Unit) }
     }
 }

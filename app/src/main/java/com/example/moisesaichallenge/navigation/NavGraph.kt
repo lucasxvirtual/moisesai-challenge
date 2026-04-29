@@ -8,11 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.moisesaichallenge.presentation.album.AlbumScreen
 import com.example.moisesaichallenge.presentation.home.HomeScreen
 import com.example.moisesaichallenge.presentation.player.PlayerScreen
-import com.example.moisesaichallenge.presentation.playlists.CreatePlaylistScreen
-import com.example.moisesaichallenge.presentation.playlists.PlaylistDetailScreen
+import com.example.moisesaichallenge.presentation.home.playlists.create.CreatePlaylistScreen
+import com.example.moisesaichallenge.presentation.home.playlists.details.PlaylistDetailScreen
 import com.example.moisesaichallenge.presentation.splash.SplashScreen
 
 private const val TRANSITION_DURATION = 350
@@ -65,8 +66,9 @@ fun NavGraph() {
             HomeScreen(
                 onNavigateToPlayer = { navController.navigate(Player) },
                 onNavigateToAlbum = { collectionId -> navController.navigate(Album(collectionId)) },
-                onNavigateToCreatePlaylist = { navController.navigate(CreatePlaylist) },
-                onNavigateToPlaylist = { playlistId -> navController.navigate(PlaylistDetail(playlistId)) }
+                onNavigateToCreatePlaylist = { navController.navigate(CreatePlaylist()) },
+                onNavigateToPlaylist = { playlistId -> navController.navigate(PlaylistDetail(playlistId)) },
+                onNavigateToEditPlaylist = { playlistId -> navController.navigate(CreatePlaylist(playlistId)) }
             )
         }
         composable<Player> {
@@ -83,13 +85,20 @@ fun NavGraph() {
         }
         composable<CreatePlaylist> {
             CreatePlaylistScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onCreated = { newId ->
+                    navController.navigate(PlaylistDetail(newId)) {
+                        popUpTo<CreatePlaylist> { inclusive = true }
+                    }
+                }
             )
         }
-        composable<PlaylistDetail> {
+        composable<PlaylistDetail> { backStackEntry ->
+            val route = backStackEntry.toRoute<PlaylistDetail>()
             PlaylistDetailScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateToPlayer = { navController.navigate(Player) }
+                onNavigateToPlayer = { navController.navigate(Player) },
+                onNavigateToEdit = { navController.navigate(CreatePlaylist(route.playlistId)) }
             )
         }
     }
