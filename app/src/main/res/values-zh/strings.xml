@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Moisesai 挑战</string>
+
+    <!-- Titles -->
+    <string name="title_songs">歌曲</string>
+    <string name="title_playlists">播放列表</string>
+    <string name="title_recently_played">最近播放</string>
+    <string name="title_now_playing">正在播放</string>
+    <string name="title_create_playlist">创建播放列表</string>
+    <string name="title_edit_playlist">编辑播放列表</string>
+
+    <!-- Labels and hints -->
+    <string name="label_search">搜索</string>
+    <string name="label_playlist_name">播放列表名称</string>
+    <string name="hint_search">搜索歌曲、艺术家…</string>
+
+    <!-- Actions -->
+    <string name="action_create">创建</string>
+    <string name="action_save">保存</string>
+    <string name="action_view_album">查看专辑</string>
+    <string name="action_add_to_playlist">添加到播放列表</string>
+    <string name="action_edit_playlist">编辑播放列表</string>
+    <string name="action_delete_playlist">删除播放列表</string>
+    <string name="action_delete">删除</string>
+    <string name="action_cancel">取消</string>
+
+    <!-- Empty states -->
+    <string name="empty_recently_played">暂无最近播放的歌曲</string>
+    <string name="empty_playlists">暂无播放列表，点击 + 创建一个。</string>
+    <string name="empty_playlists_hint">暂无播放列表，请先创建一个。</string>
+    <string name="empty_playlist_songs">暂无歌曲。\n搜索并添加歌曲开始吧。</string>
+    <string name="empty_player">播放一首歌开始吧</string>
+
+    <!-- Status -->
+    <string name="status_connected">已连接</string>
+    <string name="status_no_internet">无网络连接</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_back">返回</string>
+    <string name="cd_search">搜索</string>
+    <string name="cd_create_playlist">创建播放列表</string>
+    <string name="cd_clear_search">清除搜索</string>
+    <string name="cd_clear">清除</string>
+    <string name="cd_more_options">更多选项</string>
+    <string name="cd_play">播放</string>
+    <string name="cd_pause">暂停</string>
+    <string name="cd_repeat">重复播放</string>
+    <string name="cd_previous">上一首</string>
+    <string name="cd_next">下一首</string>
+    <string name="cd_app_logo">应用图标</string>
+
+    <!-- Format strings -->
+    <string name="no_results_for">没有"%s"的搜索结果</string>
+    <string name="snackbar_added_to_playlist">已添加到 %s</string>
+    <string name="confirm_delete_playlist">删除"%s"？此操作无法撤销。</string>
+
+    <!-- Plurals -->
+    <plurals name="track_count">
+        <item quantity="other">%d 首歌曲</item>
+    </plurals>
+</resources>

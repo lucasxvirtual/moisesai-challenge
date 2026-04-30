@@ -298,6 +298,82 @@ class SearchViewModelTest {
     }
 
     @Test
+    fun `refresh with blank query does nothing`() = runTest {
+        // Given — no query (blank by default)
+
+        // When
+        viewModel.refresh()
+        mainDispatcherRule.dispatcher.scheduler.runCurrent()
+
+        // Then
+        verify(exactly = 0) { musicRepository.searchTracks(any(), any()) }
+    }
+
+    @Test
+    fun `refresh resets page to 1 and replaces tracks`() = runTest {
+        // Given — load page 1 then page 2
+        val page1Tracks = (1..20).map { makeTrack(id = it.toLong()) }
+        val refreshedTracks = (1..5).map { makeTrack(id = it.toLong()) }
+        every { musicRepository.searchTracks("rock", 1) } returnsMany listOf(
+            flowOf(SearchResult.Success(page1Tracks, hasMore = true)),
+            flowOf(SearchResult.Success(refreshedTracks, hasMore = false))
+        )
+        every { musicRepository.searchTracks("rock", 2) } returns
+            flowOf(SearchResult.Success((21..25).map { makeTrack(id = it.toLong()) }, hasMore = false))
+
+        viewModel.onQueryChange("rock")
+        advanceTimeBy(300L)
+        mainDispatcherRule.dispatcher.scheduler.runCurrent()
+        viewModel.loadNextPage()
+        mainDispatcherRule.dispatcher.scheduler.runCurrent()
+
+        // When
+        viewModel.refresh()
+        mainDispatcherRule.dispatcher.scheduler.runCurrent()
+
+        // Then — only fresh page 1 results, pagination gone
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertEquals(refreshedTracks, state.tracks)
+            assertFalse(state.hasMore)
+            assertFalse(state.isRefreshing)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `refresh sets isRefreshing true while loading then clears on success`() = runTest {
+        // Given — initial search loaded
+        val initialTracks = listOf(makeTrack(id = 1L))
+        val refreshedTracks = listOf(makeTrack(id = 2L))
+        every { musicRepository.searchTracks("rock", 1) } returnsMany listOf(
+            flowOf(SearchResult.Success(initialTracks, hasMore = false)),
+            flowOf(SearchResult.Success(refreshedTracks, hasMore = false))
+        )
+        viewModel.onQueryChange("rock")
+        advanceTimeBy(300L)
+        mainDispatcherRule.dispatcher.scheduler.runCurrent()
+
+        // When — isRefreshing is set synchronously before the coroutine runs
+        viewModel.refresh()
+
+        viewModel.uiState.test {
+            assertTrue(expectMostRecentItem().isRefreshing)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // After the load coroutine completes
+        mainDispatcherRule.dispatcher.scheduler.runCurrent()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertFalse(state.isRefreshing)
+            assertEquals(refreshedTracks, state.tracks)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `currentTrack change triggers refreshRecentlyPlayed`() = runTest {
         // Given
         val recent = listOf(makeTrack(id = 10L))

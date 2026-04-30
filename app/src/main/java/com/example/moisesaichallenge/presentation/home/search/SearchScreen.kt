@@ -21,12 +21,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -141,6 +143,7 @@ fun SearchScreen(
             SearchResultsSection(
                 uiState = uiState,
                 listState = listState,
+                onRefresh = viewModel::refresh,
                 onTrackClick = { viewModel.onTrackClick(it) },
                 onMoreClick = { selectedTrack = it },
                 onPlayPauseClick = viewModel::onPlayPauseClick
@@ -211,10 +214,12 @@ private fun RecentlyPlayedSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchResultsSection(
     uiState: SearchUiState,
     listState: LazyListState,
+    onRefresh: () -> Unit,
     onTrackClick: (Track) -> Unit,
     onMoreClick: (Track) -> Unit,
     onPlayPauseClick: () -> Unit
@@ -237,27 +242,32 @@ private fun SearchResultsSection(
             }
         }
         else -> {
-            LazyColumn(state = listState) {
-                items(items = uiState.tracks, key = { it.id }) { track ->
-                    TrackItem(
-                        track = track,
-                        onClick = { onTrackClick(track) },
-                        onMoreClick = { onMoreClick(track) },
-                        isNowPlaying = track.id == uiState.currentTrackId,
-                        isPlaying = uiState.isPlaying && track.id == uiState.currentTrackId,
-                        onPlayPauseClick = onPlayPauseClick
-                    )
-                }
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = onRefresh,
+            ) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                    items(items = uiState.tracks, key = { it.id }) { track ->
+                        TrackItem(
+                            track = track,
+                            onClick = { onTrackClick(track) },
+                            onMoreClick = { onMoreClick(track) },
+                            isNowPlaying = track.id == uiState.currentTrackId,
+                            isPlaying = uiState.isPlaying && track.id == uiState.currentTrackId,
+                            onPlayPauseClick = onPlayPauseClick
+                        )
+                    }
 
-                if (uiState.isLoadingNextPage) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    if (uiState.isLoadingNextPage) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            }
                         }
                     }
                 }

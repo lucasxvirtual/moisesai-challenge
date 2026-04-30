@@ -80,6 +80,16 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun refresh() {
+        val query = _uiState.value.query
+        if (query.isBlank()) return
+        _uiState.update { it.copy(isRefreshing = true) }
+        searchJob?.cancel()
+        loadJob?.cancel()
+        currentPage = 1
+        loadTracks(isLoadingNextPage = false, isRefreshing = true)
+    }
+
     fun loadNextPage() {
         val state = _uiState.value
         if (state.isLoading || state.isLoadingNextPage || !state.hasMore) return
@@ -108,11 +118,17 @@ class SearchViewModel @Inject constructor(
         _uiState.update { it.copy(recentlyPlayed = recentlyPlayedRepository.getRecentlyPlayed()) }
     }
 
-    private fun loadTracks(isLoadingNextPage: Boolean) {
+    private fun loadTracks(isLoadingNextPage: Boolean, isRefreshing: Boolean = false) {
         val query = _uiState.value.query
         loadJob = viewModelScope.launch {
             _uiState.update { state ->
                 if (isLoadingNextPage) state.copy(isLoadingNextPage = true) else state.copy(isLoading = true)
+            }
+
+            // since we get from in memory cache the PtR is instantaneous and the UI glitches,
+            // so we're adding a delay just for mock purposes.
+            if (isRefreshing) {
+                delay(2000)
             }
 
             musicRepository.searchTracks(query, currentPage).collect { emission ->
@@ -129,6 +145,7 @@ class SearchViewModel @Inject constructor(
                                 state.copy(
                                     tracks = emission.tracks,
                                     isLoading = false,
+                                    isRefreshing = false,
                                     hasMore = emission.hasMore
                                 )
                             }
@@ -137,7 +154,7 @@ class SearchViewModel @Inject constructor(
                     is SearchResult.Error -> {
                         val offline = emission.throwable is IOException
                         _uiState.update { state ->
-                            state.copy(isLoading = false, isLoadingNextPage = false)
+                            state.copy(isLoading = false, isLoadingNextPage = false, isRefreshing = false)
                         }
                         if (!offline) {
                             _searchError.emit(emission.throwable.message ?: "Unexpected error")

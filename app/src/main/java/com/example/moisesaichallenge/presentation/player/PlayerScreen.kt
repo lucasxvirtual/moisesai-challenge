@@ -13,6 +13,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -20,14 +22,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.moisesaichallenge.R
+import com.example.moisesaichallenge.domain.model.Playlist
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.presentation.components.TrackOptionsBottomSheet
+import com.example.moisesaichallenge.presentation.home.playlists.components.AddToPlaylistBottomSheet
 import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
 
 @Composable
@@ -37,14 +45,32 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val playlists by viewModel.playlists.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var trackForPlaylist by remember { mutableStateOf<Track?>(null) }
+    val addedToPlaylistFormat = androidx.compose.ui.res.stringResource(R.string.snackbar_added_to_playlist)
 
     PlayerScreenContent(
         uiState = uiState,
+        playlists = playlists,
+        snackbarHostState = snackbarHostState,
         showBottomSheet = showBottomSheet,
+        trackForPlaylist = trackForPlaylist,
         onBack = onBack,
         onShowBottomSheet = { showBottomSheet = true },
         onDismissBottomSheet = { showBottomSheet = false },
+        onAddToPlaylist = { trackForPlaylist = uiState.track },
+        onDismissPlaylistSheet = { trackForPlaylist = null },
+        onPlaylistSelected = { playlistId ->
+            trackForPlaylist?.let { track ->
+                viewModel.addTrackToPlaylist(playlistId, track)
+                val name = playlists.find { it.id == playlistId }?.name
+                if (name != null) scope.launch { snackbarHostState.showSnackbar(addedToPlaylistFormat.format(name)) }
+            }
+            trackForPlaylist = null
+        },
         onNavigateToAlbum = onNavigateToAlbum,
         onPlay = viewModel::play,
         onPause = viewModel::pause,
@@ -59,10 +85,16 @@ fun PlayerScreen(
 @Composable
 private fun PlayerScreenContent(
     uiState: PlayerUiState,
+    playlists: List<Playlist> = emptyList(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     showBottomSheet: Boolean,
+    trackForPlaylist: Track? = null,
     onBack: () -> Unit,
     onShowBottomSheet: () -> Unit,
     onDismissBottomSheet: () -> Unit,
+    onAddToPlaylist: () -> Unit = {},
+    onDismissPlaylistSheet: () -> Unit = {},
+    onPlaylistSelected: (Long) -> Unit = {},
     onNavigateToAlbum: (Long) -> Unit = {},
     onPlay: () -> Unit,
     onPause: () -> Unit,
@@ -72,11 +104,12 @@ private fun PlayerScreenContent(
     onToggleRepeat: () -> Unit
 ) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Now playing",
+                        text = stringResource(R.string.title_now_playing),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.displaySmall
@@ -86,7 +119,7 @@ private fun PlayerScreenContent(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
@@ -94,7 +127,7 @@ private fun PlayerScreenContent(
                     IconButton(onClick = onShowBottomSheet) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options",
+                            contentDescription = stringResource(R.string.cd_more_options),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -131,9 +164,21 @@ private fun PlayerScreenContent(
                 onViewAlbum = {
                     onDismissBottomSheet()
                     onNavigateToAlbum(track.collectionId)
+                },
+                onAddToPlaylist = {
+                    onDismissBottomSheet()
+                    onAddToPlaylist()
                 }
             )
         }
+    }
+
+    trackForPlaylist?.let {
+        AddToPlaylistBottomSheet(
+            playlists = playlists,
+            onDismiss = onDismissPlaylistSheet,
+            onPlaylistSelected = onPlaylistSelected
+        )
     }
 }
 

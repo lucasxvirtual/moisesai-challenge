@@ -3,6 +3,9 @@ package com.example.moisesaichallenge.presentation.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moisesaichallenge.core.playback.PlaybackManager
+import com.example.moisesaichallenge.domain.model.Playlist
+import com.example.moisesaichallenge.domain.model.Track
+import com.example.moisesaichallenge.domain.repository.PlaylistRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,8 +15,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val playbackManager: PlaybackManager
+    private val playbackManager: PlaybackManager,
+    private val playlistRepository: PlaylistRepository
 ) : ViewModel() {
+
+    val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists
 
     val uiState: StateFlow<PlayerUiState> = combine(
         playbackManager.currentTrack,
@@ -39,4 +45,5 @@ class PlayerViewModel @Inject constructor(
     fun skipNext() = playbackManager.skipNext()
     fun skipPrevious() = playbackManager.skipPrevious()
     fun toggleRepeat() = playbackManager.toggleRepeat()
+    fun addTrackToPlaylist(playlistId: Long, track: Track) = playlistRepository.addTrack(playlistId, track)
 }
