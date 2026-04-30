@@ -30,11 +30,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.domain.model.Playlist
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.presentation.home.playlists.components.PlaylistArtwork
@@ -92,13 +94,13 @@ private fun PlaylistDetailContent(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showOptions = true }) {
                         Icon(
-                            Icons.Default.MoreVert, contentDescription = "More options",
+                            Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_more_options),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -180,7 +182,7 @@ private fun PlaylistContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No songs yet.\nSearch and add songs to get started.",
+                        text = stringResource(R.string.empty_playlist_songs),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

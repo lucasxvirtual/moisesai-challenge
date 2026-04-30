@@ -10,7 +10,7 @@ class RecentlyPlayedLocalDataSourceImpl @Inject constructor() : RecentlyPlayedLo
     override fun getAll(): List<Track> = tracks.toList()
 
     override fun add(track: Track) {
-        tracks.removeIf { it.id == track.id }
+        if (tracks.any { it.id == track.id }) return
         tracks.addFirst(track)
         if (tracks.size > MAX_SIZE) tracks.removeLast()
     }

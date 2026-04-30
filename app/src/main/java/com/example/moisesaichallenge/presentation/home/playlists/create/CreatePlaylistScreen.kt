@@ -33,8 +33,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.presentation.components.TrackItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,10 +57,10 @@ fun CreatePlaylistScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (uiState.isEditMode) "Edit Playlist" else "Create Playlist") },
+                title = { Text(stringResource(if (uiState.isEditMode) R.string.title_edit_playlist else R.string.title_create_playlist)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
@@ -67,7 +69,7 @@ fun CreatePlaylistScreen(
                         enabled = uiState.name.isNotBlank(),
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                     ) {
-                        Text(if (uiState.isEditMode) "Save" else "Create")
+                        Text(stringResource(if (uiState.isEditMode) R.string.action_save else R.string.action_create))
                     }
                 }
             )
@@ -82,7 +84,7 @@ fun CreatePlaylistScreen(
             OutlinedTextField(
                 value = uiState.name,
                 onValueChange = viewModel::onNameChange,
-                label = { Text("Playlist name") },
+                label = { Text(stringResource(R.string.label_playlist_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -98,12 +100,12 @@ fun CreatePlaylistScreen(
                 value = uiState.query,
                 onValueChange = viewModel::onQueryChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search songs, artists...") },
+                placeholder = { Text(stringResource(R.string.hint_search)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (uiState.query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear))
                         }
                     }
                 },
@@ -133,7 +135,7 @@ fun CreatePlaylistScreen(
                 displayedTracks.isEmpty() && uiState.query.isNotBlank() -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "No results for \"${uiState.query}\"",
+                            text = stringResource(R.string.no_results_for, uiState.query),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

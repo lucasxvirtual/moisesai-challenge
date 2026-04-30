@@ -1,3 +1,62 @@
 <resources>
     <string name="app_name">Moisesai Challenge</string>
+
+    <!-- Titles -->
+    <string name="title_songs">Songs</string>
+    <string name="title_playlists">Playlists</string>
+    <string name="title_recently_played">Recently Played</string>
+    <string name="title_now_playing">Now Playing</string>
+    <string name="title_create_playlist">Create Playlist</string>
+    <string name="title_edit_playlist">Edit Playlist</string>
+
+    <!-- Labels and hints -->
+    <string name="label_search">Search</string>
+    <string name="label_playlist_name">Playlist name</string>
+    <string name="hint_search">Search songs, artists...</string>
+
+    <!-- Actions -->
+    <string name="action_create">Create</string>
+    <string name="action_save">Save</string>
+    <string name="action_view_album">View album</string>
+    <string name="action_add_to_playlist">Add to playlist</string>
+    <string name="action_edit_playlist">Edit playlist</string>
+    <string name="action_delete_playlist">Delete playlist</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Empty states -->
+    <string name="empty_recently_played">No recently played songs yet</string>
+    <string name="empty_playlists">No playlists yet. Tap + to create one.</string>
+    <string name="empty_playlists_hint">No playlists yet. Create one first.</string>
+    <string name="empty_playlist_songs">No songs yet.\nSearch and add songs to get started.</string>
+    <string name="empty_player">Play a song to get started</string>
+
+    <!-- Status -->
+    <string name="status_connected">Connected</string>
+    <string name="status_no_internet">No internet connection</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_back">Back</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_create_playlist">Create playlist</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="cd_clear">Clear</string>
+    <string name="cd_more_options">More options</string>
+    <string name="cd_play">Play</string>
+    <string name="cd_pause">Pause</string>
+    <string name="cd_repeat">Repeat</string>
+    <string name="cd_previous">Previous</string>
+    <string name="cd_next">Next</string>
+    <string name="cd_app_logo">App logo</string>
+
+    <!-- Format strings -->
+    <string name="no_results_for">No results for \"%s\"</string>
+    <string name="snackbar_added_to_playlist">Added to %s</string>
+    <string name="confirm_delete_playlist">Delete \"%s\"? This action cannot be undone.</string>
+
+    <!-- Plurals -->
+    <plurals name="track_count">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
 </resources>

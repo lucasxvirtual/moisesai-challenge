@@ -15,6 +15,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.moisesaichallenge.R
 import kotlinx.coroutines.delay
@@ -49,7 +50,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
     ) {
         Icon(
             painter = painterResource(id = R.drawable.logo),
-            contentDescription = "App logo",
+            contentDescription = stringResource(R.string.cd_app_logo),
             modifier = Modifier.size(100.dp),
             tint = Color.Unspecified
         )

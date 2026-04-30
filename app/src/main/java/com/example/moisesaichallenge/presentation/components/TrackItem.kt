@@ -29,9 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.example.moisesaichallenge.R
 import coil.compose.AsyncImage
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
@@ -108,7 +110,7 @@ fun TrackItem(
             IconButton(onClick = { onPlayPauseClick?.invoke() }) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    contentDescription = if (isPlaying) stringResource(R.string.cd_pause) else stringResource(R.string.cd_play),
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
@@ -119,7 +121,7 @@ fun TrackItem(
             IconButton(onClick = it) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More options",
+                    contentDescription = stringResource(R.string.cd_more_options),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

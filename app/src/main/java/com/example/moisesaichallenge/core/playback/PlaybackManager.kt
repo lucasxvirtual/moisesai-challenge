@@ -3,6 +3,7 @@ package com.example.moisesaichallenge.core.playback
 import android.content.Context
 import android.media.MediaPlayer
 import com.example.moisesaichallenge.domain.model.Track
+import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,8 @@ import javax.inject.Singleton
 
 @Singleton
 class PlaybackManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val recentlyPlayedRepository: RecentlyPlayedRepository
 ) {
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -46,7 +48,6 @@ class PlaybackManager @Inject constructor(
     val durationMs: StateFlow<Long> = _durationMs.asStateFlow()
     val isRepeat: StateFlow<Boolean> = _isRepeat.asStateFlow()
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    val queue: StateFlow<List<Track>> = _queue.asStateFlow()
 
     fun setQueue(tracks: List<Track>, startIndex: Int) {
         _queue.value = tracks
@@ -67,6 +68,7 @@ class PlaybackManager @Inject constructor(
     }
 
     fun play() {
+        if (_isLoading.value) return
         mediaPlayer?.let {
             if (!it.isPlaying) {
                 it.start()
@@ -124,6 +126,7 @@ class PlaybackManager @Inject constructor(
         val url = track.previewUrl
 
         _currentIndex.value = index
+        recentlyPlayedRepository.recordPlayed(track)
         _positionMs.value = 0L
         _isPlaying.value = false
         positionUpdateJob?.cancel()
@@ -141,9 +144,9 @@ class PlaybackManager @Inject constructor(
         mediaPlayer = MediaPlayer().apply {
             setDataSource(url)
             setOnPreparedListener { mp ->
-                _durationMs.value = mp.duration.toLong()
+                _durationMs.value = mediaPlayer?.duration?.toLong() ?: 0
                 _isLoading.value = false
-                mp.start()
+                mediaPlayer?.start()
                 _isPlaying.value = true
                 startPositionUpdates()
             }
@@ -160,7 +163,7 @@ class PlaybackManager @Inject constructor(
                     if (next < _queue.value.size) loadTrack(next)
                 }
             }
-            setOnErrorListener { _, _, _ ->
+            setOnErrorListener { a, b, c ->
                 _isLoading.value = false
                 _isPlaying.value = false
                 true

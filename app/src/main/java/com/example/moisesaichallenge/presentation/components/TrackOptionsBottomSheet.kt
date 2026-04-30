@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -83,7 +84,7 @@ fun TrackOptionsBottomSheet(
                     tint = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "View album",
+                    text = stringResource(R.string.action_view_album),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -104,7 +105,7 @@ fun TrackOptionsBottomSheet(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Add to playlist",
+                        text = stringResource(R.string.action_add_to_playlist),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )

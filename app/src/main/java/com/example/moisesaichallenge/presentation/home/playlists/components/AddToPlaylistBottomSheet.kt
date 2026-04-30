@@ -19,9 +19,12 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.domain.model.Playlist
 import com.example.moisesaichallenge.ui.theme.PopupBackground
 
@@ -43,7 +46,7 @@ fun AddToPlaylistBottomSheet(
                 .padding(bottom = 32.dp, start = 24.dp, end = 24.dp)
         ) {
             Text(
-                text = "Add to playlist",
+                text = stringResource(R.string.action_add_to_playlist),
                 style = MaterialTheme.typography.displaySmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -60,7 +63,7 @@ fun AddToPlaylistBottomSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No playlists yet. Create one first.",
+                        text = stringResource(R.string.empty_playlists_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -87,7 +90,7 @@ fun AddToPlaylistBottomSheet(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "${playlist.tracks.size} ${if (playlist.tracks.size == 1) "track" else "tracks"}",
+                                    text = pluralStringResource(R.plurals.track_count, playlist.tracks.size, playlist.tracks.size),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

@@ -25,9 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.domain.model.Playlist
 import com.example.moisesaichallenge.ui.theme.PopupBackground
 
@@ -66,7 +69,7 @@ fun PlaylistOptionsBottomSheet(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${playlist.tracks.size} ${if (playlist.tracks.size == 1) "track" else "tracks"}",
+                    text = pluralStringResource(R.plurals.track_count, playlist.tracks.size, playlist.tracks.size),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface
@@ -87,7 +90,7 @@ fun PlaylistOptionsBottomSheet(
                     tint = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Edit playlist",
+                    text = stringResource(R.string.action_edit_playlist),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -107,7 +110,7 @@ fun PlaylistOptionsBottomSheet(
                     tint = MaterialTheme.colorScheme.error
                 )
                 Text(
-                    text = "Delete playlist",
+                    text = stringResource(R.string.action_delete_playlist),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -120,13 +123,13 @@ fun PlaylistOptionsBottomSheet(
             onDismissRequest = { showDeleteConfirm = false },
             title = {
                 Text(
-                    "Delete playlist",
+                    stringResource(R.string.action_delete_playlist),
                     color = MaterialTheme.colorScheme.onSurface
                 )
             },
             text = {
                 Text(
-                    "Delete \"${playlist.name}\"? This action cannot be undone.",
+                    stringResource(R.string.confirm_delete_playlist, playlist.name),
                     color = MaterialTheme.colorScheme.onSurface
                 )
             },
@@ -135,7 +138,7 @@ fun PlaylistOptionsBottomSheet(
                     onClick = { showDeleteConfirm = false; onDelete() },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
@@ -143,7 +146,7 @@ fun PlaylistOptionsBottomSheet(
                     onClick = { showDeleteConfirm = false },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
             containerColor = PopupBackground,

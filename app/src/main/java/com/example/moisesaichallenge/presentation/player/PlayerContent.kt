@@ -23,10 +23,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.presentation.player.components.TrackProgressSlider
 import androidx.compose.foundation.layout.Arrangement
 
@@ -81,7 +83,7 @@ internal fun PlayerContent(
             IconButton(onClick = onToggleRepeat) {
                 Icon(
                     imageVector = Icons.Default.Repeat,
-                    contentDescription = "Repeat",
+                    contentDescription = stringResource(R.string.cd_repeat),
                     tint = if (uiState.isRepeat) MaterialTheme.colorScheme.onPrimary
                     else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -107,7 +109,7 @@ internal fun PlayerContent(
             IconButton(onClick = onSkipPrevious, modifier = Modifier.size(56.dp)) {
                 Icon(
                     imageVector = Icons.Default.SkipPrevious,
-                    contentDescription = "Previous",
+                    contentDescription = stringResource(R.string.cd_previous),
                     modifier = Modifier.size(36.dp)
                 )
             }
@@ -117,14 +119,14 @@ internal fun PlayerContent(
             ) {
                 Icon(
                     imageVector = if (uiState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (uiState.isPlaying) "Pause" else "Play",
+                    contentDescription = if (uiState.isPlaying) stringResource(R.string.cd_pause) else stringResource(R.string.cd_play),
                     modifier = Modifier.size(36.dp)
                 )
             }
             IconButton(onClick = onSkipNext, modifier = Modifier.size(56.dp)) {
                 Icon(
                     imageVector = Icons.Default.SkipNext,
-                    contentDescription = "Next",
+                    contentDescription = stringResource(R.string.cd_next),
                     modifier = Modifier.size(36.dp)
                 )
             }

@@ -26,7 +26,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.presentation.home.playlists.list.PlaylistsScreen
 import com.example.moisesaichallenge.presentation.home.search.SearchScreen
 import kotlinx.coroutines.launch
@@ -53,13 +55,13 @@ fun HomeScreen(
         topBar = {
             when (selectedTab) {
                 HomeTab.Search -> TopAppBar(
-                    title = { Text("Songs", style = MaterialTheme.typography.displayMedium) },
+                    title = { Text(stringResource(R.string.title_songs), style = MaterialTheme.typography.displayMedium) },
                     actions = {
                         if (!isSearchVisible) {
                             IconButton(onClick = { isSearchVisible = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Search,
-                                    contentDescription = "Search",
+                                    contentDescription = stringResource(R.string.cd_search),
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
@@ -68,12 +70,12 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
                 HomeTab.Playlists -> TopAppBar(
-                    title = { Text("Playlists", style = MaterialTheme.typography.displayMedium) },
+                    title = { Text(stringResource(R.string.title_playlists), style = MaterialTheme.typography.displayMedium) },
                     actions = {
                         IconButton(onClick = onNavigateToCreatePlaylist) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = "Create playlist",
+                                contentDescription = stringResource(R.string.cd_create_playlist),
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
@@ -88,7 +90,7 @@ fun HomeScreen(
                     selected = selectedTab == HomeTab.Search,
                     onClick = { selectedTabIndex = HomeTab.Search.ordinal },
                     icon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    label = { Text("Search") },
+                    label = { Text(stringResource(R.string.label_search)) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.surface,
                         selectedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -99,7 +101,7 @@ fun HomeScreen(
                     selected = selectedTab == HomeTab.Playlists,
                     onClick = { selectedTabIndex = HomeTab.Playlists.ordinal },
                     icon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null) },
-                    label = { Text("Playlists") },
+                    label = { Text(stringResource(R.string.title_playlists)) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.surface,
                         selectedTextColor = MaterialTheme.colorScheme.onSurface,
