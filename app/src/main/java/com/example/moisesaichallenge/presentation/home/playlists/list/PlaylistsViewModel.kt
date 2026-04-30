@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.playlists
+package com.example.moisesaichallenge.presentation.home.playlists
 
 import androidx.lifecycle.ViewModel
 import com.example.moisesaichallenge.domain.model.Playlist
