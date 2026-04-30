@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.playlists
+package com.example.moisesaichallenge.presentation.home.playlists.details
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -6,9 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.moisesaichallenge.core.playback.PlaybackManager
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.domain.usecase.DeletePlaylistUseCase
-import com.example.moisesaichallenge.domain.usecase.GetPlaylistsUseCase
-import com.example.moisesaichallenge.domain.usecase.RecordTrackPlayedUseCase
+import com.example.moisesaichallenge.domain.repository.PlaylistRepository
+import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
 import com.example.moisesaichallenge.navigation.PlaylistDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,10 +25,9 @@ import javax.inject.Inject
 @HiltViewModel
 class PlaylistDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    getPlaylistsUseCase: GetPlaylistsUseCase,
-    private val deletePlaylistUseCase: DeletePlaylistUseCase,
-    private val playbackManager: PlaybackManager,
-    private val recordTrackPlayedUseCase: RecordTrackPlayedUseCase
+    private val playlistRepository: PlaylistRepository,
+    private val recentlyPlayedRepository: RecentlyPlayedRepository,
+    private val playbackManager: PlaybackManager
 ) : ViewModel() {
 
     private val playlistId: Long = savedStateHandle.toRoute<PlaylistDetail>().playlistId
@@ -44,7 +42,7 @@ class PlaylistDetailViewModel @Inject constructor(
     val navigateBack: SharedFlow<Unit> = _navigateBack.asSharedFlow()
 
     init {
-        getPlaylistsUseCase()
+        playlistRepository.playlists
             .onEach { playlists ->
                 _uiState.update { it.copy(playlist = playlists.find { p -> p.id == playlistId }) }
             }
@@ -62,7 +60,7 @@ class PlaylistDetailViewModel @Inject constructor(
     fun onTrackClick(track: Track) {
         val tracks = _uiState.value.playlist?.tracks ?: return
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
-        recordTrackPlayedUseCase(track)
+        recentlyPlayedRepository.recordPlayed(track)
         playbackManager.setQueueKeepingCurrent(tracks, index)
         viewModelScope.launch { _navigateToPlayer.emit(Unit) }
     }
@@ -72,7 +70,7 @@ class PlaylistDetailViewModel @Inject constructor(
     }
 
     fun deletePlaylist() {
-        deletePlaylistUseCase(playlistId)
+        playlistRepository.delete(playlistId)
         viewModelScope.launch { _navigateBack.emit(Unit) }
     }
 }

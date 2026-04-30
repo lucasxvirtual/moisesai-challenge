@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.components
+package com.example.moisesaichallenge.presentation.home.playlists.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -26,8 +26,8 @@ import com.example.moisesaichallenge.domain.model.Playlist
 @Composable
 fun PlaylistArtwork(
     playlist: Playlist,
+    modifier: Modifier = Modifier,
     size: Dp = 52.dp,
-    modifier: Modifier = Modifier
 ) {
     val distinctArtworks = playlist.tracks.mapNotNull { it.artworkUrl }.distinct()
 

@@ -94,7 +94,8 @@ private fun PlayerScreenContent(
                     IconButton(onClick = onShowBottomSheet) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options"
+                            contentDescription = "More options",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -153,7 +154,7 @@ private val previewTrack = Track(
 @PreviewLightDark
 @Composable
 private fun PlayerScreenPlayingPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         PlayerScreenContent(
             uiState = PlayerUiState(
                 track = previewTrack,
@@ -179,7 +180,7 @@ private fun PlayerScreenPlayingPreview() {
 @PreviewLightDark
 @Composable
 private fun PlayerScreenPausedRepeatPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         PlayerScreenContent(
             uiState = PlayerUiState(
                 track = previewTrack,
@@ -201,5 +202,3 @@ private fun PlayerScreenPausedRepeatPreview() {
         )
     }
 }
-
-// endregion

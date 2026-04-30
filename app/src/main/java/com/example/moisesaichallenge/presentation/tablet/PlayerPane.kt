@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.player
+package com.example.moisesaichallenge.presentation.tablet
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.moisesaichallenge.presentation.components.TrackOptionsBottomSheet
+import com.example.moisesaichallenge.presentation.player.PlayerContent
+import com.example.moisesaichallenge.presentation.player.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +51,11 @@ fun PlayerPane(
                 actions = {
                     if (uiState.track != null) {
                         IconButton(onClick = { showBottomSheet = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = "More options",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }

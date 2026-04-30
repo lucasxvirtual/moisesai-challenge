@@ -119,7 +119,7 @@ fun CreatePlaylistScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             val displayedTracks = if (uiState.query.isBlank()) {
-                if (uiState.selectedTracksList.isNotEmpty()) uiState.selectedTracksList else uiState.recentlyPlayed
+                uiState.selectedTracksList.ifEmpty { uiState.recentlyPlayed }
             } else {
                 uiState.tracks
             }

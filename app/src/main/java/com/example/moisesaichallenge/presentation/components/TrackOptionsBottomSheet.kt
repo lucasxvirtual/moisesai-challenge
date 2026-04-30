@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.ui.theme.BottomSheetBackground80
+import com.example.moisesaichallenge.ui.theme.PopupBackground
 import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,12 +32,13 @@ import com.example.moisesaichallenge.ui.theme.MoisesaiChallengeTheme
 fun TrackOptionsBottomSheet(
     track: Track,
     onDismiss: () -> Unit,
-    onViewAlbum: () -> Unit
+    onViewAlbum: () -> Unit,
+    onAddToPlaylist: (() -> Unit)? = null
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(),
-        containerColor = BottomSheetBackground80
+        containerColor = PopupBackground
     ) {
         Column(
             modifier = Modifier
@@ -85,6 +88,28 @@ fun TrackOptionsBottomSheet(
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
+
+            if (onAddToPlaylist != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onAddToPlaylist)
+                        .padding(vertical = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Add to playlist",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
     }
 }
@@ -119,7 +144,7 @@ private val previewTrackLongTitle = Track(
 @PreviewLightDark
 @Composable
 private fun TrackOptionsBottomSheetPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         TrackOptionsBottomSheet(
             track = previewTrack,
             onDismiss = {},
@@ -132,7 +157,7 @@ private fun TrackOptionsBottomSheetPreview() {
 @PreviewLightDark
 @Composable
 private fun TrackOptionsBottomSheetLongTitlePreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         TrackOptionsBottomSheet(
             track = previewTrackLongTitle,
             onDismiss = {},
@@ -140,5 +165,3 @@ private fun TrackOptionsBottomSheetLongTitlePreview() {
         )
     }
 }
-
-// endregion

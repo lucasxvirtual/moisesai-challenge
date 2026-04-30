@@ -1,13 +1,14 @@
-package com.example.moisesaichallenge.presentation.home
+package com.example.moisesaichallenge.presentation.home.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moisesaichallenge.core.playback.PlaybackManager
 import com.example.moisesaichallenge.domain.model.SearchResult
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.domain.usecase.GetRecentlyPlayedUseCase
-import com.example.moisesaichallenge.domain.usecase.RecordTrackPlayedUseCase
-import com.example.moisesaichallenge.domain.usecase.SearchTracksUseCase
+import com.example.moisesaichallenge.domain.model.Playlist
+import com.example.moisesaichallenge.domain.repository.MusicRepository
+import com.example.moisesaichallenge.domain.repository.PlaylistRepository
+import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -25,18 +26,20 @@ import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val searchTracksUseCase: SearchTracksUseCase,
-    private val getRecentlyPlayedUseCase: GetRecentlyPlayedUseCase,
-    private val recordTrackPlayedUseCase: RecordTrackPlayedUseCase,
+class SearchViewModel @Inject constructor(
+    private val musicRepository: MusicRepository,
+    private val recentlyPlayedRepository: RecentlyPlayedRepository,
+    private val playlistRepository: PlaylistRepository,
     private val playbackManager: PlaybackManager
 ) : ViewModel() {
+
+    val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists
 
     private val _navigateToPlayer = MutableSharedFlow<Unit>(replay = 0)
     val navigateToPlayer: SharedFlow<Unit> = _navigateToPlayer.asSharedFlow()
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(SearchUiState())
+    val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     private var currentPage = 1
     private var searchJob: Job? = null
@@ -58,11 +61,11 @@ class HomeViewModel @Inject constructor(
 
         if (query.isBlank()) {
             currentPage = 1
-            _uiState.update { it.copy(query = query, tracks = emptyList(), hasMore = false, isLoading = false, error = null, isOffline = false) }
+            _uiState.update { it.copy(query = query, tracks = emptyList(), hasMore = false, isLoading = false, error = null) }
             return
         }
 
-        _uiState.update { it.copy(query = query, tracks = emptyList(), isLoading = true, error = null, isOffline = false) }
+        _uiState.update { it.copy(query = query, tracks = emptyList(), isLoading = true, error = null) }
 
         searchJob = viewModelScope.launch {
             delay(DEBOUNCE_MS)
@@ -81,7 +84,7 @@ class HomeViewModel @Inject constructor(
     fun onTrackClick(track: Track) {
         val tracks = if (_uiState.value.query.isBlank()) _uiState.value.recentlyPlayed else _uiState.value.tracks
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
-        recordTrackPlayedUseCase(track)
+        recentlyPlayedRepository.recordPlayed(track)
         refreshRecentlyPlayed()
         if (track.id != playbackManager.currentTrack.value?.id) {
             playbackManager.setQueue(tracks, index)
@@ -93,13 +96,12 @@ class HomeViewModel @Inject constructor(
         if (playbackManager.isPlaying.value) playbackManager.pause() else playbackManager.play()
     }
 
-    fun onTrackPlayed(track: Track) {
-        recordTrackPlayedUseCase(track)
-        refreshRecentlyPlayed()
+    fun addTrackToPlaylist(playlistId: Long, track: Track) {
+        playlistRepository.addTrack(playlistId, track)
     }
 
     private fun refreshRecentlyPlayed() {
-        _uiState.update { it.copy(recentlyPlayed = getRecentlyPlayedUseCase()) }
+        _uiState.update { it.copy(recentlyPlayed = recentlyPlayedRepository.getRecentlyPlayed()) }
     }
 
     private fun loadTracks(isLoadingMore: Boolean) {
@@ -109,7 +111,7 @@ class HomeViewModel @Inject constructor(
                 if (isLoadingMore) state.copy(isLoadingMore = true) else state.copy(isLoading = true)
             }
 
-            searchTracksUseCase(query, currentPage).collect { emission ->
+            musicRepository.searchTracks(query, currentPage).collect { emission ->
                 when (emission) {
                     is SearchResult.Success -> {
                         _uiState.update { state ->
@@ -134,7 +136,6 @@ class HomeViewModel @Inject constructor(
                             state.copy(
                                 isLoading = false,
                                 isLoadingMore = false,
-                                isOffline = offline,
                                 error = if (offline) null else emission.throwable.message ?: "Unexpected error"
                             )
                         }

@@ -2,7 +2,6 @@ package com.example.moisesaichallenge.core.playback
 
 import android.content.Context
 import android.media.MediaPlayer
-import androidx.core.content.ContextCompat
 import com.example.moisesaichallenge.domain.model.Track
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope

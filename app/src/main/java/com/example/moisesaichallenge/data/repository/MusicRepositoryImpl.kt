@@ -1,7 +1,7 @@
 package com.example.moisesaichallenge.data.repository
 
 import com.example.moisesaichallenge.core.network.NetworkResult
-import com.example.moisesaichallenge.core.pagination.PaginationParams.Companion.PAGE_SIZE
+import com.example.moisesaichallenge.core.pagination.PaginationParams.PAGE_SIZE
 import com.example.moisesaichallenge.data.local.TrackLocalDataSource
 import com.example.moisesaichallenge.data.network.datasource.MusicRemoteDataSource
 import com.example.moisesaichallenge.data.network.model.TrackDto

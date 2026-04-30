@@ -6,11 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.moisesaichallenge.domain.model.SearchResult
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.domain.usecase.CreatePlaylistUseCase
-import com.example.moisesaichallenge.domain.usecase.GetPlaylistsUseCase
-import com.example.moisesaichallenge.domain.usecase.GetRecentlyPlayedUseCase
-import com.example.moisesaichallenge.domain.usecase.SearchTracksUseCase
-import com.example.moisesaichallenge.domain.usecase.UpdatePlaylistUseCase
+import com.example.moisesaichallenge.domain.repository.MusicRepository
+import com.example.moisesaichallenge.domain.repository.PlaylistRepository
+import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
 import com.example.moisesaichallenge.navigation.CreatePlaylist
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -28,11 +26,9 @@ import javax.inject.Inject
 @HiltViewModel
 class CreatePlaylistViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val searchTracksUseCase: SearchTracksUseCase,
-    private val getRecentlyPlayedUseCase: GetRecentlyPlayedUseCase,
-    private val getPlaylistsUseCase: GetPlaylistsUseCase,
-    private val createPlaylistUseCase: CreatePlaylistUseCase,
-    private val updatePlaylistUseCase: UpdatePlaylistUseCase
+    private val musicRepository: MusicRepository,
+    private val recentlyPlayedRepository: RecentlyPlayedRepository,
+    private val playlistRepository: PlaylistRepository
 ) : ViewModel() {
 
     private val playlistId: Long = savedStateHandle.toRoute<CreatePlaylist>().playlistId
@@ -49,10 +45,10 @@ class CreatePlaylistViewModel @Inject constructor(
     private var loadJob: Job? = null
 
     init {
-        _uiState.update { it.copy(recentlyPlayed = getRecentlyPlayedUseCase(), isEditMode = isEditMode) }
+        _uiState.update { it.copy(recentlyPlayed = recentlyPlayedRepository.getRecentlyPlayed(), isEditMode = isEditMode) }
 
         if (isEditMode) {
-            val playlist = getPlaylistsUseCase().value.find { it.id == playlistId }
+            val playlist = playlistRepository.playlists.value.find { it.id == playlistId }
             playlist?.let { p ->
                 p.tracks.forEach { selectedTracks[it.id] = it }
                 _uiState.update {
@@ -106,17 +102,17 @@ class CreatePlaylistViewModel @Inject constructor(
         if (name.isBlank()) return
         val tracks = selectedTracks.values.toList()
         val emitId = if (isEditMode) {
-            updatePlaylistUseCase(playlistId, name, tracks)
+            playlistRepository.update(playlistId, name, tracks)
             0L
         } else {
-            createPlaylistUseCase(name, tracks)
+            playlistRepository.create(name, tracks)
         }
         viewModelScope.launch { _created.emit(emitId) }
     }
 
     private fun loadTracks(query: String) {
         loadJob = viewModelScope.launch {
-            searchTracksUseCase(query, page = 1).collect { emission ->
+            musicRepository.searchTracks(query, page = 1).collect { emission ->
                 when (emission) {
                     is SearchResult.Success -> _uiState.update {
                         it.copy(tracks = emission.tracks, isLoading = false)

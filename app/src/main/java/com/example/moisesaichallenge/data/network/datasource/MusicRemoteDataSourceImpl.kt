@@ -2,7 +2,7 @@ package com.example.moisesaichallenge.data.network.datasource
 
 import com.example.moisesaichallenge.core.network.NetworkResult
 import com.example.moisesaichallenge.core.network.safeApiCall
-import com.example.moisesaichallenge.core.pagination.PaginationParams.Companion.FETCH_LIMIT
+import com.example.moisesaichallenge.core.pagination.PaginationParams.FETCH_LIMIT
 import com.example.moisesaichallenge.data.network.model.TrackDto
 import com.example.moisesaichallenge.data.network.service.ITunesApiService
 import javax.inject.Inject

@@ -18,7 +18,6 @@ import com.example.moisesaichallenge.presentation.album.AlbumScreen
 import com.example.moisesaichallenge.presentation.home.HomeScreen
 import com.example.moisesaichallenge.presentation.home.playlists.create.CreatePlaylistScreen
 import com.example.moisesaichallenge.presentation.home.playlists.details.PlaylistDetailScreen
-import com.example.moisesaichallenge.presentation.player.PlayerPane
 
 @Composable
 fun TabletLayout() {

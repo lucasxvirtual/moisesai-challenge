@@ -110,7 +110,7 @@ internal fun formatDuration(ms: Long): String {
 @PreviewLightDark
 @Composable
 private fun TrackProgressSliderMidwayPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         Surface {
             TrackProgressSlider(
                 positionMs = 86_000L,
@@ -125,7 +125,7 @@ private fun TrackProgressSliderMidwayPreview() {
 @PreviewLightDark
 @Composable
 private fun TrackProgressSliderStartPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         Surface {
             TrackProgressSlider(
                 positionMs = 0L,
@@ -136,5 +136,3 @@ private fun TrackProgressSliderStartPreview() {
         }
     }
 }
-
-// endregion

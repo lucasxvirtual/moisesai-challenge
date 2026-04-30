@@ -222,7 +222,7 @@ private val previewAlbum = Album(
 @PreviewLightDark
 @Composable
 private fun AlbumScreenLoadedPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         AlbumScreenContent(
             uiState = AlbumUiState(album = previewAlbum),
             onBack = {},
@@ -234,7 +234,7 @@ private fun AlbumScreenLoadedPreview() {
 @PreviewLightDark
 @Composable
 private fun AlbumScreenLoadingPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         AlbumScreenContent(
             uiState = AlbumUiState(isLoading = true),
             onBack = {},
@@ -242,5 +242,3 @@ private fun AlbumScreenLoadingPreview() {
         )
     }
 }
-
-// endregion

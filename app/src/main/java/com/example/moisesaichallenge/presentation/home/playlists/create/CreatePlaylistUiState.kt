@@ -1,4 +1,4 @@
-package com.example.moisesaichallenge.presentation.playlists
+package com.example.moisesaichallenge.presentation.home.playlists.create
 
 import com.example.moisesaichallenge.domain.model.Track
 

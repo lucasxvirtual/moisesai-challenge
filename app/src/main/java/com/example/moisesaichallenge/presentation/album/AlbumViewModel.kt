@@ -7,8 +7,8 @@ import androidx.navigation.toRoute
 import com.example.moisesaichallenge.core.playback.PlaybackManager
 import com.example.moisesaichallenge.domain.model.AlbumResult
 import com.example.moisesaichallenge.domain.model.Track
-import com.example.moisesaichallenge.domain.usecase.GetAlbumUseCase
-import com.example.moisesaichallenge.domain.usecase.RecordTrackPlayedUseCase
+import com.example.moisesaichallenge.domain.repository.AlbumRepository
+import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
 import com.example.moisesaichallenge.navigation.Album
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,9 +26,9 @@ import javax.inject.Inject
 @HiltViewModel
 class AlbumViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getAlbumUseCase: GetAlbumUseCase,
-    private val playbackManager: PlaybackManager,
-    private val recordTrackPlayedUseCase: RecordTrackPlayedUseCase
+    private val albumRepository: AlbumRepository,
+    private val recentlyPlayedRepository: RecentlyPlayedRepository,
+    private val playbackManager: PlaybackManager
 ) : ViewModel() {
 
     private val collectionId: Long = savedStateHandle.toRoute<Album>().collectionId
@@ -56,7 +56,7 @@ class AlbumViewModel @Inject constructor(
     fun onTrackClick(track: Track) {
         val tracks = _uiState.value.album?.tracks ?: return
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
-        recordTrackPlayedUseCase(track)
+        recentlyPlayedRepository.recordPlayed(track)
         playbackManager.setQueueKeepingCurrent(tracks, index)
         viewModelScope.launch { _navigateToPlayer.emit(Unit) }
     }
@@ -64,7 +64,7 @@ class AlbumViewModel @Inject constructor(
     private fun loadAlbum() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = getAlbumUseCase(collectionId)) {
+            when (val result = albumRepository.getAlbum(collectionId)) {
                 is AlbumResult.Success -> _uiState.update {
                     it.copy(album = result.album, isLoading = false)
                 }

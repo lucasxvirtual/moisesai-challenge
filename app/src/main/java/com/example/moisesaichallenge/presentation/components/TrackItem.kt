@@ -144,7 +144,7 @@ private val previewTrack = Track(
 @PreviewLightDark
 @Composable
 private fun TrackItemPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         Surface {
             TrackItem(track = previewTrack, onClick = {}, onMoreClick = {})
         }
@@ -154,7 +154,7 @@ private fun TrackItemPreview() {
 @PreviewLightDark
 @Composable
 private fun TrackItemSelectedPreview() {
-    MoisesaiChallengeTheme(dynamicColor = false) {
+    MoisesaiChallengeTheme {
         Surface {
             TrackItem(track = previewTrack, onClick = {}, onMoreClick = null, isSelected = true)
         }
