@@ -3,13 +3,10 @@ package com.example.moisesaichallenge.presentation.album
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.example.moisesaichallenge.core.playback.PlaybackManager
 import com.example.moisesaichallenge.domain.model.AlbumResult
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.domain.repository.AlbumRepository
-import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
-import com.example.moisesaichallenge.navigation.Album
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,11 +24,10 @@ import javax.inject.Inject
 class AlbumViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val albumRepository: AlbumRepository,
-    private val recentlyPlayedRepository: RecentlyPlayedRepository,
     private val playbackManager: PlaybackManager
 ) : ViewModel() {
 
-    private val collectionId: Long = savedStateHandle.toRoute<Album>().collectionId
+    private val collectionId: Long = savedStateHandle.get<Long>("collectionId")!!
 
     private val _uiState = MutableStateFlow(AlbumUiState(isLoading = true))
     val uiState: StateFlow<AlbumUiState> = _uiState.asStateFlow()
@@ -56,7 +52,6 @@ class AlbumViewModel @Inject constructor(
     fun onTrackClick(track: Track) {
         val tracks = _uiState.value.album?.tracks ?: return
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
-        recentlyPlayedRepository.recordPlayed(track)
         playbackManager.setQueueKeepingCurrent(tracks, index)
         viewModelScope.launch { _navigateToPlayer.emit(Unit) }
     }

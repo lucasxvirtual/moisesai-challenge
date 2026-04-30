@@ -38,6 +38,9 @@ class SearchViewModel @Inject constructor(
     private val _navigateToPlayer = MutableSharedFlow<Unit>(replay = 0)
     val navigateToPlayer: SharedFlow<Unit> = _navigateToPlayer.asSharedFlow()
 
+    private val _searchError = MutableSharedFlow<String>(replay = 0)
+    val searchError: SharedFlow<String> = _searchError.asSharedFlow()
+
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
@@ -48,7 +51,10 @@ class SearchViewModel @Inject constructor(
     init {
         refreshRecentlyPlayed()
         playbackManager.currentTrack
-            .onEach { track -> _uiState.update { it.copy(currentTrackId = track?.id) } }
+            .onEach { track ->
+                _uiState.update { it.copy(currentTrackId = track?.id) }
+                refreshRecentlyPlayed()
+            }
             .launchIn(viewModelScope)
         playbackManager.isPlaying
             .onEach { playing -> _uiState.update { it.copy(isPlaying = playing) } }
@@ -61,31 +67,29 @@ class SearchViewModel @Inject constructor(
 
         if (query.isBlank()) {
             currentPage = 1
-            _uiState.update { it.copy(query = query, tracks = emptyList(), hasMore = false, isLoading = false, error = null) }
+            _uiState.update { it.copy(query = query, tracks = emptyList(), hasMore = false, isLoading = false) }
             return
         }
 
-        _uiState.update { it.copy(query = query, tracks = emptyList(), isLoading = true, error = null) }
+        _uiState.update { it.copy(query = query, tracks = emptyList(), isLoading = true) }
 
         searchJob = viewModelScope.launch {
             delay(DEBOUNCE_MS)
             currentPage = 1
-            loadTracks(isLoadingMore = false)
+            loadTracks(isLoadingNextPage = false)
         }
     }
 
     fun loadNextPage() {
         val state = _uiState.value
-        if (state.isLoading || state.isLoadingMore || !state.hasMore) return
+        if (state.isLoading || state.isLoadingNextPage || !state.hasMore) return
         currentPage++
-        loadTracks(isLoadingMore = true)
+        loadTracks(isLoadingNextPage = true)
     }
 
     fun onTrackClick(track: Track) {
         val tracks = if (_uiState.value.query.isBlank()) _uiState.value.recentlyPlayed else _uiState.value.tracks
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
-        recentlyPlayedRepository.recordPlayed(track)
-        refreshRecentlyPlayed()
         if (track.id != playbackManager.currentTrack.value?.id) {
             playbackManager.setQueue(tracks, index)
         }
@@ -104,21 +108,21 @@ class SearchViewModel @Inject constructor(
         _uiState.update { it.copy(recentlyPlayed = recentlyPlayedRepository.getRecentlyPlayed()) }
     }
 
-    private fun loadTracks(isLoadingMore: Boolean) {
+    private fun loadTracks(isLoadingNextPage: Boolean) {
         val query = _uiState.value.query
         loadJob = viewModelScope.launch {
             _uiState.update { state ->
-                if (isLoadingMore) state.copy(isLoadingMore = true) else state.copy(isLoading = true)
+                if (isLoadingNextPage) state.copy(isLoadingNextPage = true) else state.copy(isLoading = true)
             }
 
             musicRepository.searchTracks(query, currentPage).collect { emission ->
                 when (emission) {
                     is SearchResult.Success -> {
                         _uiState.update { state ->
-                            if (isLoadingMore) {
+                            if (isLoadingNextPage) {
                                 state.copy(
                                     tracks = state.tracks + emission.tracks,
-                                    isLoadingMore = false,
+                                    isLoadingNextPage = false,
                                     hasMore = emission.hasMore
                                 )
                             } else {
@@ -133,11 +137,10 @@ class SearchViewModel @Inject constructor(
                     is SearchResult.Error -> {
                         val offline = emission.throwable is IOException
                         _uiState.update { state ->
-                            state.copy(
-                                isLoading = false,
-                                isLoadingMore = false,
-                                error = if (offline) null else emission.throwable.message ?: "Unexpected error"
-                            )
+                            state.copy(isLoading = false, isLoadingNextPage = false)
+                        }
+                        if (!offline) {
+                            _searchError.emit(emission.throwable.message ?: "Unexpected error")
                         }
                     }
                 }

@@ -3,13 +3,11 @@ package com.example.moisesaichallenge.presentation.home.playlists.create
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.example.moisesaichallenge.domain.model.SearchResult
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.domain.repository.MusicRepository
 import com.example.moisesaichallenge.domain.repository.PlaylistRepository
 import com.example.moisesaichallenge.domain.repository.RecentlyPlayedRepository
-import com.example.moisesaichallenge.navigation.CreatePlaylist
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -31,7 +29,7 @@ class CreatePlaylistViewModel @Inject constructor(
     private val playlistRepository: PlaylistRepository
 ) : ViewModel() {
 
-    private val playlistId: Long = savedStateHandle.toRoute<CreatePlaylist>().playlistId
+    private val playlistId: Long = savedStateHandle.get<Long>("playlistId") ?: 0L
     private val isEditMode = playlistId != 0L
 
     private val _uiState = MutableStateFlow(CreatePlaylistUiState())

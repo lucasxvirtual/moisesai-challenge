@@ -39,8 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.moisesaichallenge.R
 import com.example.moisesaichallenge.domain.model.Track
 import com.example.moisesaichallenge.presentation.components.TrackItem
 import com.example.moisesaichallenge.presentation.components.TrackOptionsBottomSheet
@@ -64,12 +66,13 @@ fun SearchScreen(
     val isKeyboardVisible = WindowInsets.isImeVisible
     var selectedTrack by remember { mutableStateOf<Track?>(null) }
     var trackForPlaylist by remember { mutableStateOf<Track?>(null) }
+    val addedToPlaylistFormat = stringResource(R.string.snackbar_added_to_playlist)
 
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
             val total = listState.layoutInfo.totalItemsCount
-            total > 0 && lastVisible >= total - 3 && uiState.hasMore && !uiState.isLoadingMore
+            total > 0 && lastVisible >= total - 3 && uiState.hasMore && !uiState.isLoadingNextPage
         }
     }
 
@@ -79,6 +82,10 @@ fun SearchScreen(
 
     LaunchedEffect(Unit) {
         viewModel.navigateToPlayer.collect { onNavigateToPlayer() }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.searchError.collect { onShowSnackbar(it) }
     }
 
     LaunchedEffect(isKeyboardVisible) {
@@ -102,12 +109,12 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester),
-                placeholder = { Text("Search songs, artists...") },
+                placeholder = { Text(stringResource(R.string.hint_search)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (uiState.query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search))
                         }
                     }
                 },
@@ -164,7 +171,7 @@ fun SearchScreen(
                 val playlistName = playlists.find { it.id == playlistId }?.name
                 viewModel.addTrackToPlaylist(playlistId, track)
                 trackForPlaylist = null
-                if (playlistName != null) onShowSnackbar("Added to $playlistName")
+                if (playlistName != null) onShowSnackbar(addedToPlaylistFormat.format(playlistName))
             }
         )
     }
@@ -177,13 +184,13 @@ private fun RecentlyPlayedSection(
     onMoreClick: (Track) -> Unit,
     onPlayPauseClick: () -> Unit
 ) {
-    Text(text = "Recently Played", style = MaterialTheme.typography.titleMedium)
+    Text(text = stringResource(R.string.title_recently_played), style = MaterialTheme.typography.titleMedium)
     Spacer(modifier = Modifier.height(4.dp))
 
     if (uiState.recentlyPlayed.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = "No recently played songs yet",
+                text = stringResource(R.string.empty_recently_played),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -215,22 +222,15 @@ private fun SearchResultsSection(
     when {
         uiState.isLoading && uiState.tracks.isEmpty() -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-        uiState.error != null -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = uiState.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
         uiState.tracks.isEmpty() -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "No results for \"${uiState.query}\"",
+                    text = stringResource(R.string.no_results_for, uiState.query),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -249,7 +249,7 @@ private fun SearchResultsSection(
                     )
                 }
 
-                if (uiState.isLoadingMore) {
+                if (uiState.isLoadingNextPage) {
                     item {
                         Box(
                             modifier = Modifier
