@@ -46,7 +46,6 @@ class SearchViewModel @Inject constructor(
     private var loadJob: Job? = null
 
     init {
-        refreshRecentlyPlayed()
         playbackManager.currentTrack
             .onEach { track -> _uiState.update { it.copy(currentTrackId = track?.id) } }
             .launchIn(viewModelScope)
@@ -85,7 +84,6 @@ class SearchViewModel @Inject constructor(
         val tracks = if (_uiState.value.query.isBlank()) _uiState.value.recentlyPlayed else _uiState.value.tracks
         val index = tracks.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
         recentlyPlayedRepository.recordPlayed(track)
-        refreshRecentlyPlayed()
         if (track.id != playbackManager.currentTrack.value?.id) {
             playbackManager.setQueue(tracks, index)
         }
@@ -100,7 +98,7 @@ class SearchViewModel @Inject constructor(
         playlistRepository.addTrack(playlistId, track)
     }
 
-    private fun refreshRecentlyPlayed() {
+    fun refreshRecentlyPlayed() {
         _uiState.update { it.copy(recentlyPlayed = recentlyPlayedRepository.getRecentlyPlayed()) }
     }
 

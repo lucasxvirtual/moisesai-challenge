@@ -30,6 +30,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +67,13 @@ fun SearchScreen(
     val isKeyboardVisible = WindowInsets.isImeVisible
     var selectedTrack by remember { mutableStateOf<Track?>(null) }
     var trackForPlaylist by remember { mutableStateOf<Track?>(null) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.refreshRecentlyPlayed()
+        }
+    }
 
     val shouldLoadMore by remember {
         derivedStateOf {
