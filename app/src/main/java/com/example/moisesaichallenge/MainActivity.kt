@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.collectAsState
@@ -23,6 +25,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var connectionStatusProvider: ConnectionStatusProvider
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -30,10 +33,11 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.BLACK)
         )
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
             MoisesaiChallengeTheme {
                 val isOnline by connectionStatusProvider.isOnline.collectAsState()
                 Box(modifier = Modifier.fillMaxSize()) {
-                    NavGraph()
+                    NavGraph(windowSizeClass = windowSizeClass)
                     NoConnectionBanner(isOnline = isOnline)
                 }
             }
