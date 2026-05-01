@@ -329,6 +329,7 @@ class SearchViewModelTest {
 
         // When
         viewModel.refresh()
+        advanceTimeBy(3000L)
         mainDispatcherRule.dispatcher.scheduler.runCurrent()
 
         // Then — only fresh page 1 results, pagination gone
@@ -363,6 +364,7 @@ class SearchViewModelTest {
         }
 
         // After the load coroutine completes
+        advanceTimeBy(3000L)
         mainDispatcherRule.dispatcher.scheduler.runCurrent()
 
         viewModel.uiState.test {
